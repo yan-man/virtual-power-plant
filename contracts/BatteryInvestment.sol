@@ -12,7 +12,7 @@ contract BatteryInvestment {
   uint public numBatteries = 0;
   uint numAdmins = 0;
   uint[] public activeBatteryIDs;
-  uint public numActiveBatteries = 0;
+//   uint public numActiveBatteries = 0;
   struct Battery {
       uint capacity;
       uint currentFilled;
@@ -69,8 +69,7 @@ contract BatteryInvestment {
   isBatteryValidModifier(_capacity, _currentFilled, _cost, _priceThreshold)
   returns (uint batteryID)
   {
-      batteryID = numBatteries;
-      batteries[batteryID] = (Battery({
+      batteries.push(Battery({
           capacity: _capacity,
           currentFilled: _currentFilled,
           dateAdded: now,
@@ -79,7 +78,8 @@ contract BatteryInvestment {
           priceThreshold: _priceThreshold,
           active: true
       }));
-      numBatteries++;
+      batteryID = numBatteries++;
+    //   numBatteries++;
       totalInvestment -= _cost;
       emit LogNewBatteryAdded(_serialNumber);
   }
@@ -101,6 +101,23 @@ contract BatteryInvestment {
       emit LogNewBatteryAdded(batteries[_batteryID].serialNumber);
   }
 
+  function getBatteryIDs() public view returns (uint) {
+      return batteries.length;
+  }
+
+  function getBatteryCapacityRemaining (uint _batteryID) public view returns (uint) {
+      uint remaining = batteries[_batteryID].capacity -  batteries[_batteryID].currentFilled;
+      if(remaining < 0){
+          return 0;
+      }
+      return remaining;
+  }
+
+
+  // function that returns entire array
+//   function getBattery(uint _batteryID) public returns (uint) {
+//       return batteries[_batteryID];
+//   }
 
 //   function (<parameter types>) {internal|external} [pure|view|payable] [returns (<return types>)]
 
