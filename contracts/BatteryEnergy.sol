@@ -1,48 +1,67 @@
 pragma solidity >=0.5.0;
 
-import "./BatteryInvestment.sol";
-import "./BatteryLibrary.sol";
+import "./VirtualPowerPlant.sol";
+// import "./BatteryLibrary.sol";
 
 contract BatteryEnergy {
 
-    // using BatteryLibrary for *;
+    VirtualPowerPlant VirtualPowerPlantContract;
 
-    event Log(uint counter);
 
-    BatteryInvestment BatteryInvestmentContract;
-    address BatteryInvestmentAddress;
+    address public VirtualPowerPlantAddress;
 
-    // Battery[] public tempBattery;
+     // Battery[] public tempBattery;
     uint public temp;
     uint public batteryIDMax;
 
-    constructor () public {
-
-    }
-
-    function setAddress(address _address) public{
-        BatteryInvestmentAddress = _address;
-        BatteryInvestmentContract = BatteryInvestment(_address);
-    }
-
-    // function getBatteryIDs() public view returns(uint) {
-    //     return BatteryInvestmentContract.numBatteries();
-    // }
+    event Log(uint counter);
+    event LogBatteryCheck(uint batteryID);
 
 
 
-    function checkBatteryEnergy() public  {
-        batteryIDMax = BatteryInvestmentContract.getBatteryIDs();
 
-        // tempBattery = super.getBattery(0);
-        // temp = batteries[0].capacity;
+    constructor (address _VirtualPowerPlantAddress) public {
+      VirtualPowerPlantAddress = _VirtualPowerPlantAddress;
+      VirtualPowerPlantContract = VirtualPowerPlant(_VirtualPowerPlantAddress);
+  }
+
+
+    function checkBatteryEnergy() public returns (uint){
+        batteryIDMax = VirtualPowerPlantContract.getBatteryIDMax();
+        uint energyRate = getRealTimeEnergyPrice();
+
         for (uint i = 0; i < batteryIDMax; i++) {
-            // emit Log(i);
-            uint capacity = BatteryInvestmentContract.getBatteryCapacityRemaining(i);
+            // uint capacity = VirtualPowerPlantContract.getBatteryCapacityRemaining(i);
+            // uint threshold = VirtualPowerPlantContract.getBatteryCapacityRemaining(i);
+
+            (uint capacity, uint currentFilled, uint dateAdded, uint cost,
+            string memory serialNumber, uint priceThreshold, uint chargeRate, bool active)
+            = VirtualPowerPlantContract.batteries(i);
+
+            uint EnergyAmt = capacity - currentFilled;
+            if (EnergyAmt <= 0 || active == false) {
+                //revert("Not enough Ether provided.");
+                continue;
+            }
+
+            if (getRealTimeEnergyPrice() < priceThreshold) {
+                // emit Log((VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment());
+                buyEnergy(EnergyAmt);
+            }
+            // return (VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment();
         }
         // return tempBattery[0];
 
 
     }
+
+    function getRealTimeEnergyPrice() private returns (uint) {
+        return 10;
+    }
+
+    function buyEnergy (uint EnergyAmt) public returns (bool) {
+        return true;
+    }
+
 
 }
