@@ -9,13 +9,15 @@ contract BatteryEnergy {
 
 
     address public VirtualPowerPlantAddress;
+    uint public purchaseInterval; //in sec
 
      // Battery[] public tempBattery;
     uint public temp;
     uint public batteryIDMax;
 
-    event Log(uint counter);
+    // event Log(uint counter);
     event LogBatteryCheck(uint batteryID);
+    event energyPurchased(uint energyPurchased, uint remainingInvestment);
 
 
 
@@ -38,15 +40,16 @@ contract BatteryEnergy {
             string memory serialNumber, uint priceThreshold, uint chargeRate, bool active)
             = VirtualPowerPlantContract.batteries(i);
 
-            uint EnergyAmt = capacity - currentFilled;
-            if (EnergyAmt <= 0 || active == false) {
+            uint emptyCapacity = capacity - currentFilled;
+            if (emptyCapacity <= 0 || active == false) {
                 //revert("Not enough Ether provided.");
                 continue;
             }
 
-            if (getRealTimeEnergyPrice() < priceThreshold) {
-                // emit Log((VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment());
-                buyEnergy(EnergyAmt);
+            if (energyRate < priceThreshold) {
+                uint energyAmountToPurchase = calculateEnergyToPurchase(chargeRate);
+                buyEnergy(energyAmountToPurchase);
+                emit energyPurchased(energyAmountToPurchase, energyRate, (VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment());
             }
             // return (VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment();
         }
@@ -55,11 +58,17 @@ contract BatteryEnergy {
 
     }
 
-    function getRealTimeEnergyPrice() private returns (uint) {
-        return 10;
+
+    function calculateEnergyToPurchase(uint _chargeRate) private returns (uint energyAmount) {
+        uint purchaseIntervalHours = purchaseInterval / 3600;
+        uint energyAmount = (_chargeRate * purchaseIntervalHours);
     }
 
-    function buyEnergy (uint EnergyAmt) public returns (bool) {
+    function getRealTimeEnergyPrice() private returns (uint) {
+        return 1;
+    }
+
+    function buyEnergy (uint energyAmountToPurchase) public returns (bool) {
         return true;
     }
 
