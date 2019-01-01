@@ -2,11 +2,11 @@ pragma solidity >=0.5.0;
 
 import "./BatteryInvestment.sol";
 import "./BatteryEnergy.sol";
-
+import "github.com/OpenZeppelin/zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 /// @author Yan Man
 /// @title A Virtual Power Plant implementation. Consensys Final Project Winter 2018
-contract VirtualPowerPlant {
+contract VirtualPowerPlant is Ownable {
 
     // Type declarations
     struct Battery {
@@ -23,13 +23,13 @@ contract VirtualPowerPlant {
     BatteryInvestment public batteryInvestmentContract;
     BatteryEnergy public batteryEnergyContract;
     // State variables
-    address public owner;
+    // address public owner;
     address public virtualPowerPlantAddress;
     address public batteryInvestmentAddress;
     address public batteryEnergyAddress;
     uint public numBatteries = 0;
     uint numAdmins = 0;
-    uint[] public activeBatteryIDs
+    uint[] public activeBatteryIDs;
     mapping(address => bool) public admins;
 
     // Events
@@ -40,7 +40,7 @@ contract VirtualPowerPlant {
     event LogBatteryThresholdChanged (uint newThreshold);
 
     // Modifiers
-    modifier isOwnerModifier { require(msg.sender == owner, "not the valid Owner"); _; }
+    // modifier onlyOwner { require(msg.sender == owner, "not the valid Owner"); _; }
     modifier isAdminModifier { require(admins[msg.sender] == true, "not a valid Admin"); _; }
     modifier isBatteryValidModifier (uint _capacity, uint _currentFilled, uint _cost, uint _priceThreshold) {
         require(_capacity >= _currentFilled, "Capacity must exceed amount filled");
@@ -50,7 +50,7 @@ contract VirtualPowerPlant {
     }
 
     constructor () public {
-        owner = msg.sender;
+        // owner = msg.sender;
         admins[msg.sender] = true;
         virtualPowerPlantAddress = address(this);
         batteryInvestmentContract = new BatteryInvestment(virtualPowerPlantAddress);
@@ -148,7 +148,7 @@ contract VirtualPowerPlant {
 
     function changeAdmin (address _newAdminAddress, bool _adminStatus)
         public
-        isOwnerModifier
+        isOwner
     {
         admins[_newAdminAddress] = _adminStatus;
         if (_adminStatus == true) {

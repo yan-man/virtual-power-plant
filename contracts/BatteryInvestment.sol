@@ -12,7 +12,7 @@ contract BatteryInvestment {
         uint investmentAmount; //how much they have invested in the transaction
     }
     // State variables
-    address public VirtualPowerPlantAddress;
+    address public virtualPowerPlantAddress;
     uint public totalInvestment;
     mapping(address => Investment[]) public investors;
     mapping(address => uint) public pendingWithdrawals;
@@ -24,8 +24,8 @@ contract BatteryInvestment {
     // Modifiers
     modifier enoughInvestmentModifier { require(msg.value > 0, "Attach an investment value"); _; }
 
-    constructor (address _VirtualPowerPlantAddress) public {
-        VirtualPowerPlantAddress = _VirtualPowerPlantAddress;
+    constructor (address _virtualPowerPlantAddress) public {
+        virtualPowerPlantAddress = _virtualPowerPlantAddress;
     }
 
     function () external{
@@ -52,6 +52,7 @@ contract BatteryInvestment {
 
     function updateTotalInvestment (uint _totalInvestment) public {
         totalInvestment = _totalInvestment;
+        return true;
     }
 
     function investMoney ()
@@ -75,5 +76,13 @@ contract BatteryInvestment {
         emit LogWithdrawalMade(msg.sender, withdrawalAmount);
     }
 
-
+    function triggerDividend() public payable {
+        require(pendingWithdrawals[msg.sender] > 0, "Address has no withdrawal amount");
+        uint withdrawalAmount = pendingWithdrawals[msg.sender];
+        // Remember to zero the pending refund before
+        // sending to prevent re-entrancy attacks
+        pendingWithdrawals[msg.sender] = 0;
+        msg.sender.transfer(withdrawalAmount);
+        emit LogWithdrawalMade(msg.sender, withdrawalAmount);
+    }
 }
