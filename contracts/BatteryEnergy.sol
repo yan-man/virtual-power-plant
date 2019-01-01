@@ -5,30 +5,29 @@ import "./VirtualPowerPlant.sol";
 
 contract BatteryEnergy {
 
+    // Type declarations
     VirtualPowerPlant VirtualPowerPlantContract;
 
-
+    // State variables
     address public VirtualPowerPlantAddress;
     uint public purchaseInterval; //in sec
-
      // Battery[] public tempBattery;
     uint public temp;
     uint public batteryIDMax;
 
+    // Events
     // event Log(uint counter);
     event LogBatteryCheck(uint batteryID);
     event energyPurchased(uint energyPurchased, uint remainingInvestment);
 
 
-
-
     constructor (address _VirtualPowerPlantAddress) public {
-      VirtualPowerPlantAddress = _VirtualPowerPlantAddress;
-      VirtualPowerPlantContract = VirtualPowerPlant(_VirtualPowerPlantAddress);
-  }
+        VirtualPowerPlantAddress = _VirtualPowerPlantAddress;
+        VirtualPowerPlantContract = VirtualPowerPlant(_VirtualPowerPlantAddress);
+    }
 
 
-    function checkBatteryEnergy() public returns (uint){
+    function checkBatteryEnergy () public returns (uint) {
         batteryIDMax = VirtualPowerPlantContract.getBatteryIDMax();
         uint energyRate = getRealTimeEnergyPrice();
 
@@ -36,9 +35,16 @@ contract BatteryEnergy {
             // uint capacity = VirtualPowerPlantContract.getBatteryCapacityRemaining(i);
             // uint threshold = VirtualPowerPlantContract.getBatteryCapacityRemaining(i);
 
-            (uint capacity, uint currentFilled, uint dateAdded, uint cost,
-            string memory serialNumber, uint priceThreshold, uint chargeRate, bool active)
-            = VirtualPowerPlantContract.batteries(i);
+            (
+                uint capacity,
+                uint currentFilled,
+                uint dateAdded,
+                uint cost,
+                string memory serialNumber,
+                uint priceThreshold,
+                uint chargeRate,
+                bool active
+            ) = VirtualPowerPlantContract.batteries(i);
 
             uint emptyCapacity = capacity - currentFilled;
             if (emptyCapacity <= 0 || active == false) {
@@ -48,8 +54,9 @@ contract BatteryEnergy {
 
             if (energyRate < priceThreshold) {
                 uint energyAmountToPurchase = calculateEnergyToPurchase(chargeRate);
-                buyEnergy(energyAmountToPurchase);
-                emit energyPurchased(energyAmountToPurchase, energyRate, (VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment());
+                if (buyEnergy(energyAmountToPurchase)){
+                    emit energyPurchased(energyAmountToPurchase, energyRate, (VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment());
+                }
             }
             // return (VirtualPowerPlantContract.BatteryInvestmentContract()).totalInvestment();
         }
@@ -59,12 +66,12 @@ contract BatteryEnergy {
     }
 
 
-    function calculateEnergyToPurchase(uint _chargeRate) private returns (uint energyAmount) {
+    function calculateEnergyToPurchase (uint _chargeRate) private returns (uint energyAmount) {
         uint purchaseIntervalHours = purchaseInterval / 3600;
         uint energyAmount = (_chargeRate * purchaseIntervalHours);
     }
 
-    function getRealTimeEnergyPrice() private returns (uint) {
+    function getRealTimeEnergyPrice () private returns (uint) {
         return 1;
     }
 
