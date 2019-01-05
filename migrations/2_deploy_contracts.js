@@ -1,5 +1,10 @@
-var SimpleStorage = artifacts.require("./SimpleStorage.sol");
+var VirtualPowerPlant = artifacts.require("./VirtualPowerPlant.sol");
+// var BatteryInvestment = artifacts.require("./BatteryInvestment.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(SimpleStorage);
+  deployer.deploy(VirtualPowerPlant);
 };
+
+// module.exports = function(deployer) {
+//   deployer.deploy(BatteryInvestment);
+// };

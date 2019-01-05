@@ -2,7 +2,7 @@ pragma solidity >=0.5.0;
 
 import "./BatteryInvestment.sol";
 import "./BatteryEnergy.sol";
-import "github.com/OpenZeppelin/zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./Ownable.sol";
 
 /// @author Yan Man
 /// @title A Virtual Power Plant implementation. Consensys Final Project Winter 2018
@@ -19,24 +19,25 @@ contract VirtualPowerPlant is Ownable {
         uint chargeRate;
         bool active;
     }
-    Battery[] public batteries;
-    BatteryInvestment public batteryInvestmentContract;
+    Battery[] public batteries; //internal
+    BatteryInvestment public batteryInvestmentContract; // maybe external
     BatteryEnergy public batteryEnergyContract;
     // State variables
     // address public owner;
     address public virtualPowerPlantAddress;
-    address public batteryInvestmentAddress;
-    address public batteryEnergyAddress;
+    address public batteryInvestmentAddress; //maybe external, only accessed by other contracts
+    address public batteryEnergyAddress;  //maybe can be external
     uint public numBatteries = 0;
-    uint numAdmins = 0;
-    uint[] public activeBatteryIDs;
+    uint public numAdmins = 0;
+    uint public dividendPercentage;
+    // mapping(string => uint) public batteryMapping;
     mapping(address => bool) public admins;
 
     // Events
     event LogNewInvestment (address investorAddress, uint investmentAmount);
     event LogWithdrawalMade (address investorAddress, uint withdrawalAmount);
     event LogChangeAdmin (address adminAddress, bool status);
-    event LogNewBatteryAdded (string serialNumber);
+    event LogBatteryActive (string serialNumber, bool newStatus);
     event LogBatteryThresholdChanged (uint newThreshold);
 
     // Modifiers
@@ -44,13 +45,14 @@ contract VirtualPowerPlant is Ownable {
     modifier isAdminModifier { require(admins[msg.sender] == true, "not a valid Admin"); _; }
     modifier isBatteryValidModifier (uint _capacity, uint _currentFilled, uint _cost, uint _priceThreshold) {
         require(_capacity >= _currentFilled, "Capacity must exceed amount filled");
-        require(batteryInvestmentContract.totalInvestment() >= _cost, "Not enough investment to purchase");
+        require(batteryInvestmentContract.remainingInvestment() >= _cost, "Not enough investment to purchase");
         require(_priceThreshold >= 0, "Must have a valid price threshold");
         _;
     }
 
     constructor () public {
         // owner = msg.sender;
+        dividendPercentage = 1;
         admins[msg.sender] = true;
         virtualPowerPlantAddress = address(this);
         batteryInvestmentContract = new BatteryInvestment(virtualPowerPlantAddress);
@@ -105,12 +107,12 @@ contract VirtualPowerPlant is Ownable {
             active: true
         }));
         batteryID = numBatteries++;
-
-        uint _newTotalInvestment = batteryInvestmentContract.totalInvestment() - _cost;
-        batteryInvestmentContract.updateTotalInvestment(_newTotalInvestment);
+        // batteryMapping[_serialNumber] = batteryID;
+        uint _newRemainingInvestment = batteryInvestmentContract.remainingInvestment() - _cost;
+        batteryInvestmentContract.updateRemainingInvestment(_newRemainingInvestment);
         //   batteryInvestmentAddress.delegatecall(bytes4(keccak256("updateTotalInvestment(uint256)")), _newTotalInvestment);
         //   _contract.delegatecall(bytes4(keccak256("updateMyVariable(uint256)")), newVar);
-        emit LogNewBatteryAdded(_serialNumber);
+        emit LogBatteryActive(_serialNumber, true);
     }
 
     function changeBatteryThreshold (uint _batteryID, uint _newThreshold)
@@ -128,7 +130,7 @@ contract VirtualPowerPlant is Ownable {
     {
         require(batteries[_batteryID].active);
         batteries[_batteryID].active = false;
-        emit LogNewBatteryAdded(batteries[_batteryID].serialNumber);
+        emit LogBatteryActive(batteries[_batteryID].serialNumber, false);
     }
 
     function getBatteryIDMax () public view returns (uint) {
@@ -136,7 +138,7 @@ contract VirtualPowerPlant is Ownable {
     }
 
     function getBatteryCapacityRemaining (uint _batteryID) public view returns (uint remaining) {
-        uint remaining = batteries[_batteryID].capacity -  batteries[_batteryID].currentFilled;
+        remaining = batteries[_batteryID].capacity -  batteries[_batteryID].currentFilled;
         if(remaining <= 0){
             return 0;
         }
@@ -148,7 +150,7 @@ contract VirtualPowerPlant is Ownable {
 
     function changeAdmin (address _newAdminAddress, bool _adminStatus)
         public
-        isOwner
+        onlyOwner
     {
         admins[_newAdminAddress] = _adminStatus;
         if (_adminStatus == true) {
