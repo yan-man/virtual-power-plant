@@ -71,6 +71,7 @@ contract BatteryEnergy {
             _batteryID,
             capacity,
             currentFilled,
+            serialNumber,
             chargeRate,
             energyPrice,
             chargeBattery
@@ -116,6 +117,7 @@ contract BatteryEnergy {
         uint _batteryID,
         uint _capacity,
         uint _currentFilled,
+        bytes32 _serialNumber,
         uint _chargeRate,
         uint _energyPrice,
         bool _chargeBattery
@@ -138,9 +140,21 @@ contract BatteryEnergy {
             }
 
             buyEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
+            emit LogEnergyPurchased(
+                _serialNumber,
+                calculateEnergyToTransact,
+                _energyPrice,
+                (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
+            );
         } else {
             calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), _currentFilled);
             sellEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
+            emit LogEnergySold(
+                _serialNumber,
+                calculateEnergyToTransact,
+                _energyPrice,
+                (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
+            );
         }
     }
 
