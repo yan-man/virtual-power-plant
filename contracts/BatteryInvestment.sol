@@ -16,7 +16,7 @@ contract BatteryInvestment {
     // State variables
     address public virtualPowerPlantAddress; // internal
     // uint public temp = 5;
-    uint public totalInvestment = 6; // called internally and allow External
+    uint public totalInvestment; // called internally and allow External
     uint public remainingInvestment;  // ""
     uint public dividendPercentage; // ""
     uint public pendingTotalWithdrawals; // internal
@@ -74,7 +74,7 @@ contract BatteryInvestment {
         investorsList.push(msg.sender);
         // investors[msg.sender]ot += investAmount;
         totalInvestment += investAmount;
-        remainingInvestment += remainingInvestment;
+        remainingInvestment += investAmount;
         emit LogNewInvestment(msg.sender, investAmount);
     }
 

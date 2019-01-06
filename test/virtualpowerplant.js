@@ -12,24 +12,6 @@ contract('VirtualPowerPlant', function(accounts) {
     let investmentAmount1 = 100;
     let investmentAmount2 = 150;
 
-    let NewBattery1 = Battery({
-        capacity: 100,
-        currentFilled: 20,
-        cost: 13,
-        serialNumber: "a",
-        priceThreshold: 7,
-        chargeRate: 4
-    });
-
-    let NewBattery2 = Battery({
-        capacity: 100,
-        currentFilled: 20,
-        cost: 13,
-        serialNumber: "a",
-        priceThreshold: 7,
-        chargeRate: 4
-    });
-
 
     // DONE:
 
@@ -69,31 +51,64 @@ contract('VirtualPowerPlant', function(accounts) {
   //     new Promise(() => console.log("BatteryEnergy address: " + batteryEnergyAddress));
   //     assert.equal(batteryEnergyAddress, batteryEnergyAddressCheck, "BatteryEnergy address doesn't match");
   // });
-  //
-  // it("...check BatteryInvestment multiple investments from investor1 and investor2", async() => {
-  //     await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount1});
-  //     await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
-  //     let totalInvestment = await batteryInvestmentContract.totalInvestment();
-  //     checkInvestment = investmentAmount1 + investmentAmount2;
-  //     new Promise(() => console.log("totalInvestment: " + totalInvestment));
-  //     assert.equal(totalInvestment, checkInvestment, "Investment amount is incorrect");
-  // });
-  //
-  // it("...check set Admin", async() => {
-  //     await virtualPowerPlant.changeAdmin(virtualPowerPlantAdmin, true, {from: virtualPowerPlantOwner});
-  //     let adminsNum = await virtualPowerPlant.numAdmins();
-  //     adminNumCheck = 1;
-  //     assert.equal(adminsNum, adminNumCheck, "Admin was not added properly");
-  // });
 
-  it("...check add battery to virtualPowerPlant", async() => {
-      await virtualPowerPlant.addBattery(NewBattery1, {from: virtualPowerPlantAdmin});
-      await virtualPowerPlant.addBattery(NewBattery2, {from: virtualPowerPlantOwner});
-      let numBatteries = await (virtualPowerPlant.batteries()).length;
-      assert.equal(numBatteries, 2, "Two batteries added");
+  it("...check BatteryInvestment multiple investments from investor1 and investor2", async() => {
+      await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount1});
+      await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount2});
+      await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
+      let totalInvestment = await batteryInvestmentContract.totalInvestment();
+      checkInvestment = (investmentAmount1 + investmentAmount2 + investmentAmount2);
+      new Promise(() => console.log("totalInvestment: " + totalInvestment));
+      assert.equal(totalInvestment, checkInvestment, "Investment amount is incorrect");
   });
 
+  it("...check set Admin", async() => {
+      await virtualPowerPlant.changeAdmin(virtualPowerPlantAdmin, true, {from: virtualPowerPlantOwner});
+      let adminsNum = await virtualPowerPlant.numAdmins();
+      adminNumCheck = 1;
+      assert.equal(adminsNum, adminNumCheck, "Admin was not added properly");
+  });
 
+  it("...check add 5 batteries to virtualPowerPlant", async() => {
+      await virtualPowerPlant.addBattery(100, 20, 13, "0x12", 7, 4, {from: virtualPowerPlantAdmin});
+      await virtualPowerPlant.addBattery(110, 25, 12, "0x12", 3, 6, {from: virtualPowerPlantOwner});
+      await virtualPowerPlant.addBattery(90, 22, 11, "0x12", 5, 8, {from: virtualPowerPlantOwner});
+      await virtualPowerPlant.addBattery(80, 30, 10, "0x12", 4, 10, {from: virtualPowerPlantOwner});
+      await virtualPowerPlant.addBattery(70, 26, 9, "0x12", 3, 11, {from: virtualPowerPlantOwner});
+      let numBatteries = await virtualPowerPlant.numBatteries();
+      new Promise(() => console.log("numBatteries: " + numBatteries));
+      let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+      new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
+      assert.equal(numBatteries, 5, "Batteries not added properly");
+  });
+
+  it("...decommission battery to virtualPowerPlant", async() => {
+      let removeIndex = 2;
+      let numBatteries1 = await virtualPowerPlant.numBatteries();
+      await virtualPowerPlant.decommissionBattery(removeIndex, {from: virtualPowerPlantOwner});
+      let numBatteries2 = await virtualPowerPlant.numBatteries();
+      new Promise(() => console.log("numBatteries went from: " + numBatteries1 + " to " + numBatteries2));
+      let newMapIndex = await virtualPowerPlant.getBatteryMapIndex(numBatteries2);
+      new Promise(() => console.log("newMapIndex of the last element in Batteries array, replacing the decommissioned index at " + removeIndex + ": " + newMapIndex));
+
+      // let newBatteryMapping = await virtualPowerPlant.batteryMapping(removeIndex);
+      // assert.equal(newBatteryMapping, numBatteries2, "Index of the item moved should be the last element in the batt array");
+
+      new Promise(() => console.log("newBatteryMapping: " + newBatteryMapping));
+      assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
+  });
+
+  it("...charge array of batteries", async() => {
+      let energyPurchased = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("energyPurchased: " + energyPurchased));
+      // await batteryEnergyContract.getBatteryCapacityRemaining();
+      // new Promise(() => console.log("remainingInvestment: " + ));
+      // assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
+  });
+
+  // it("...trigger dividend", async() => {
+  //     await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
+  // });
 
 
 

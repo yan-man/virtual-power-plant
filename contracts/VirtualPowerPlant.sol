@@ -14,12 +14,14 @@ contract VirtualPowerPlant is Ownable {
         uint currentFilled;
         uint dateAdded;
         uint cost;
-        string serialNumber;
+        bytes32 serialNumber;
         uint priceThreshold;
         uint chargeRate;
-        bool active;
+        bool isActive;
+        uint mapIndex;
     }
     Battery[] public batteries; //internal
+    Battery[] public decommissionedBatteries; //internal
     BatteryInvestment public batteryInvestmentContract; // maybe external
     BatteryEnergy public batteryEnergyContract;
     // State variables
@@ -30,19 +32,23 @@ contract VirtualPowerPlant is Ownable {
     uint public numBatteries = 0;
     uint public numAdmins = 0;
     uint public dividendPercentage;
-    // mapping(string => uint) public batteryMapping;
+    uint[] public batteryMapping;
     mapping(address => bool) public admins;
 
     // Events
     event LogNewInvestment (address investorAddress, uint investmentAmount);
     event LogWithdrawalMade (address investorAddress, uint withdrawalAmount);
     event LogChangeAdmin (address adminAddress, bool status);
-    event LogBatteryActive (string serialNumber, bool newStatus);
+    event LogBatteryActive (bytes32 serialNumber, bool newStatus);
     event LogBatteryThresholdChanged (uint newThreshold);
 
     // Modifiers
     // modifier onlyOwner { require(msg.sender == owner, "not the valid Owner"); _; }
-    modifier isAdminModifier { require(admins[msg.sender] == true, "not a valid Admin"); _; }
+    modifier isAdminModifier { require(
+        admins[msg.sender] == true ||
+        msg.sender == batteryInvestmentAddress ||
+        msg.sender == batteryEnergyAddress
+        , "not a valid Admin"); _; }
     modifier isBatteryValidModifier (uint _capacity, uint _currentFilled, uint _cost, uint _priceThreshold) {
         require(_capacity >= _currentFilled, "Capacity must exceed amount filled");
         require(batteryInvestmentContract.remainingInvestment() >= _cost, "Not enough investment to purchase");
@@ -87,7 +93,7 @@ contract VirtualPowerPlant is Ownable {
         uint _capacity,
         uint _currentFilled,
         uint _cost,
-        string memory _serialNumber,
+        bytes32 _serialNumber,
         uint _priceThreshold,
         uint _chargeRate
     )
@@ -96,6 +102,7 @@ contract VirtualPowerPlant is Ownable {
         isBatteryValidModifier(_capacity, _currentFilled, _cost, _priceThreshold)
         returns (uint batteryID)
     {
+        batteryID = batteries.length;
         batteries.push(Battery({
             capacity: _capacity,
             currentFilled: _currentFilled,
@@ -104,15 +111,27 @@ contract VirtualPowerPlant is Ownable {
             serialNumber: _serialNumber,
             priceThreshold: _priceThreshold,
             chargeRate: _chargeRate,
-            active: true
+            isActive: true,
+            mapIndex: batteryID
         }));
-        batteryID = numBatteries++;
+        numBatteries++;
+        batteryMapping.push(batteryID);
         // batteryMapping[_serialNumber] = batteryID;
         uint _newRemainingInvestment = batteryInvestmentContract.remainingInvestment() - _cost;
         batteryInvestmentContract.updateRemainingInvestment(_newRemainingInvestment);
         //   batteryInvestmentAddress.delegatecall(bytes4(keccak256("updateTotalInvestment(uint256)")), _newTotalInvestment);
         //   _contract.delegatecall(bytes4(keccak256("updateMyVariable(uint256)")), newVar);
         emit LogBatteryActive(_serialNumber, true);
+    }
+
+    function chargeBattery (uint _batteryID, uint _chargeAmount)
+        public
+        isAdminModifier
+        returns (uint)
+    {
+        require(batteries[_batteryID].currentFilled + _chargeAmount  <= batteries[_batteryID].capacity);
+        batteries[_batteryID].currentFilled += _chargeAmount;
+        return batteries[_batteryID].currentFilled;
     }
 
     function changeBatteryThreshold (uint _batteryID, uint _newThreshold)
@@ -124,17 +143,47 @@ contract VirtualPowerPlant is Ownable {
         emit LogBatteryThresholdChanged(_newThreshold);
     }
 
-    function decomissionBattery (uint _batteryID)
+    function decommissionBattery (uint _batteryID)
         public
         isAdminModifier
+        returns (uint)
     {
-        require(batteries[_batteryID].active);
-        batteries[_batteryID].active = false;
-        emit LogBatteryActive(batteries[_batteryID].serialNumber, false);
+        require(batteries[_batteryID].isActive);
+        batteries[_batteryID].isActive = false;
+        bytes32 serialNumber = batteries[_batteryID].serialNumber;
+        decommissionedBatteries.push(batteries[_batteryID]);
+        // batteries[_batteryID] = batteries[batteries.length - 1];
+        // batteries.length--;
+        batteries[batteries.length - 1].mapIndex = batteries[_batteryID].mapIndex;
+        batteryMapping[_batteryID] = batteries.length - 1;
+        batteryMapping.length--;
+        numBatteries--;
+        emit LogBatteryActive(serialNumber, false);
+        return numBatteries;
     }
 
-    function getBatteryIDMax () public view returns (uint) {
-        return batteries.length;
+    // function getBatteryIDMax () public view returns (uint) {
+    //     return batteries.length;
+    // }
+
+    function getRelevantBatteryInfo (uint _batteryID) public view isAdminModifier returns (
+        uint,
+        uint,
+        bytes32,
+        uint,
+        uint,
+        bool,
+        uint
+    ) {
+        return (
+            batteries[_batteryID].capacity,
+            batteries[_batteryID].currentFilled,
+            batteries[_batteryID].serialNumber,
+            batteries[_batteryID].priceThreshold,
+            batteries[_batteryID].chargeRate,
+            batteries[_batteryID].isActive,
+            batteries[_batteryID].mapIndex
+        );
     }
 
     function getBatteryCapacityRemaining (uint _batteryID) public view returns (uint remaining) {
@@ -146,6 +195,10 @@ contract VirtualPowerPlant is Ownable {
 
     function getBatteryChargeRate (uint _batteryID) public view returns (uint) {
         return batteries[_batteryID].chargeRate;
+    }
+
+    function getBatteryMapIndex (uint _batteryID) public view returns (uint) {
+        return batteries[_batteryID].mapIndex;
     }
 
     function changeAdmin (address _newAdminAddress, bool _adminStatus)
