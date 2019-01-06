@@ -130,7 +130,7 @@ contract VirtualPowerPlant is Ownable {
         returns (uint)
     {
         require(batteries[_batteryID].currentFilled + _chargeAmount  <= batteries[_batteryID].capacity);
-        batteries[_batteryID].currentFilled += _chargeAmount;
+        batteries[_batteryID].currentFilled = batteries[_batteryID].currentFilled + _chargeAmount;
         return batteries[_batteryID].currentFilled;
     }
 

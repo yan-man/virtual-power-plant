@@ -9,8 +9,8 @@ contract('VirtualPowerPlant', function(accounts) {
     const investor1 = accounts[2];
     const investor2 = accounts[3];
 
-    let investmentAmount1 = 100;
-    let investmentAmount2 = 150;
+    let investmentAmount1 = 1000;
+    let investmentAmount2 = 1500;
 
 
     // DONE:

@@ -48,7 +48,7 @@ contract BatteryEnergy {
 
     function executeBatteryTransaction (uint _batteryID) public returns (uint) {
 
-        uint energyAmountToPurchase;
+        uint energyAmountToTransact;
         uint energyPrice = getRealTimeEnergyPrice();
 
         emit LogBatteryCheck(_batteryID);
@@ -62,56 +62,85 @@ contract BatteryEnergy {
             bool isActive,
             uint mapIndex
         ) = VirtualPowerPlantContract.getRelevantBatteryInfo(_batteryID);
-        uint emptyCapacity = VirtualPowerPlantContract.getBatteryCapacityRemaining(_batteryID);
+        // uint emptyCapacity = VirtualPowerPlantContract.getBatteryCapacityRemaining(_batteryID);
 
-        require(emptyCapacity > 0, "Battery should have empty capacity for charge");
+        // require(emptyCapacity > 0, "Battery should have empty capacity for charge");
         require(isActive == true, "Battery should be active");
+        bool chargeBattery = energyDecisionAlgorithm(priceThreshold, energyPrice);
+        energyAmountToTransact = transactEnergy(
+            _batteryID,
+            capacity,
+            currentFilled,
+            chargeRate,
+            energyPrice,
+            chargeBattery
+        );
 
-        if (energyDecisionAlgorithm(priceThreshold, energyPrice) == true) {
-            energyAmountToPurchase = calculateEnergyToPurchase(chargeRate, energyPrice, emptyCapacity);
-            if (buyEnergy(_batteryID, energyAmountToPurchase, energyPrice) == true){
-                emit LogEnergyPurchased(
-                    serialNumber,
-                    energyAmountToPurchase,
-                    energyPrice,
-                    (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
-                );
+        // if (chargeBattery == true) {
+        //
+        //     buyEnergy(_batteryID, energyAmountToTransact, energyPrice);
+        //
+        //     // emit LogEnergyPurchased(
+        //     //     serialNumber,
+        //     //     energyAmountToPurchase,
+        //     //     energyPrice,
+        //     //     (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
+        //     // );
+        //     // return energyAmountToPurchase;
+        // } else {
+        //     // energyToSell = calculateEnergyToTransact(chargeRate, energyPrice, emptyCapacity);
+        //     sellEnergy(_batteryID, energyAmountToTransact, energyPrice);
+        //     // emit LogEnergySold(
+        //     //     serialNumber,
+        //     //     energyAmountToPurchase,
+        //     //     energyPrice,
+        //     //     (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
+        //     // );
+        // }
+        // return 0;
 
-                return energyAmountToPurchase;
-            }
-        } else {
-            emit LogEnergySold(
-                serialNumber,
-                energyAmountToPurchase,
-                energyPrice,
-                (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
-            );
+
+    }
+
+
+    function energyDecisionAlgorithm (uint _priceThreshold, uint _energyPrice) private pure returns (bool) {
+        if (_priceThreshold > _energyPrice) {
+            return true;
+        } else{
+            return false;
         }
-        return 0;
     }
 
-
-    function energyDecisionAlgorithm (uint _priceThreshold, uint _energyPrice) private pure returns (bool chargeBattery) {
-        chargeBattery = _priceThreshold > _energyPrice;
-    }
-
-    function calculateEnergyToPurchase
+    function transactEnergy
     (
+        uint _batteryID,
+        uint _capacity,
+        uint _currentFilled,
         uint _chargeRate,
         uint _energyPrice,
-        uint _emptyCapacity
+        bool _chargeBattery
     )
     private
-    view
-    returns (uint energyAmountToPurchase)
+    returns (uint calculateEnergyToTransact)
     {
         uint purchaseIntervalHours = SafeMath.div(purchaseInterval, 3600);  // convert seconds to hours
-        energyAmountToPurchase = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), _emptyCapacity);
-        uint remainingInvestment = (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment();
-        uint costOfEnergyPurchase = SafeMath.mul(energyAmountToPurchase, _energyPrice);
-        if (costOfEnergyPurchase > remainingInvestment) {
-            costOfEnergyPurchase = remainingInvestment;
-            energyAmountToPurchase = SafeMath.div(remainingInvestment, _energyPrice);
+        uint emptyCapacity = _capacity - _currentFilled;
+
+        if (_chargeBattery == true) {
+            require(emptyCapacity > 0, "Battery should have empty capacity for charge");
+
+            calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), emptyCapacity);
+            uint remainingInvestment = (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment();
+            uint costOfEnergyPurchase = SafeMath.mul(calculateEnergyToTransact, _energyPrice);
+            if (costOfEnergyPurchase > remainingInvestment) {
+                costOfEnergyPurchase = remainingInvestment;
+                calculateEnergyToTransact = SafeMath.div(remainingInvestment, _energyPrice);
+            }
+
+            buyEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
+        } else {
+            calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), _currentFilled);
+            sellEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
         }
     }
 
@@ -131,6 +160,21 @@ contract BatteryEnergy {
         if ((VirtualPowerPlantContract.batteryInvestmentContract()).updateRemainingInvestment(newRemainingInvestment)) {
             // remainingInvestment = newRemainingInvestment;
             VirtualPowerPlantContract.chargeBattery(_batteryID, _energyAmountToPurchase);
+            return true;
+        }
+        return false;
+    }
+
+    function sellEnergy (uint _batteryID, uint _energyAmountToSell, uint _energyPrice) private returns (bool) {
+        uint newRemainingInvestment = SafeMath.add(
+            (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment(),
+            SafeMath.mul(
+                _energyAmountToSell,
+                _energyPrice
+            )
+        );
+        if ((VirtualPowerPlantContract.batteryInvestmentContract()).updateRemainingInvestment(newRemainingInvestment)) {
+            VirtualPowerPlantContract.chargeBattery(_batteryID, -_energyAmountToSell);
             return true;
         }
         return false;
