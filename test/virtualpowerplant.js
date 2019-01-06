@@ -99,10 +99,48 @@ contract('VirtualPowerPlant', function(accounts) {
   });
 
   it("...charge array of batteries", async() => {
-      let energyPurchased = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("energyPurchased: " + energyPurchased));
-      // await batteryEnergyContract.getBatteryCapacityRemaining();
-      // new Promise(() => console.log("remainingInvestment: " + ));
+
+      let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+      new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
+
+      batteryCapacityRemaining11 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining11));
+
+      batteryCapacityRemaining12 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining12));
+
+      batteryCapacityRemaining13 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining13));
+
+      batteryCapacityRemaining14 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining14));
+
+      batteryCapacityRemaining15 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining15));
+
+      checkBatteryEnergyTX = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
+      // new Promise(() => console.log(checkBatteryEnergyTX));
+
+      let remainingInvestment2 = await batteryInvestmentContract.remainingInvestment();
+      new Promise(() => console.log("remainingInvestment: " + remainingInvestment2));
+
+      batteryCapacityRemaining21 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining21));
+
+      batteryCapacityRemaining22 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining22));
+
+      batteryCapacityRemaining23 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining23));
+
+      batteryCapacityRemaining24 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining24));
+
+      batteryCapacityRemaining25 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
+      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining25));
+
+      numBatts = await virtualPowerPlant.numBatteries();
+      new Promise(() => console.log("numBatts: " + numBatts));
       // assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
   });
 
