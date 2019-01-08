@@ -7,7 +7,7 @@ import "./VirtualPowerPlant.sol";
 contract BatteryInvestment {
 
     // Type declarations
-    // VirtualPowerPlant internal VirtualPowerPlantContract;
+    VirtualPowerPlant internal VirtualPowerPlantContract;
     struct Investment {
         address investorAddress; // address of investor
         uint timestamp; // timestamp of their investment
@@ -18,7 +18,7 @@ contract BatteryInvestment {
     // uint public temp = 5;
     uint public totalInvestment; // called internally and allow External
     uint public remainingInvestment;  // ""
-    uint public dividendPercentage; // ""
+    uint public dividendPercentage = 2; // ""
     uint public pendingTotalWithdrawals; // internal
     address[] public investorsList;
     mapping(address => uint) public pendingWithdrawals;  //
@@ -34,7 +34,7 @@ contract BatteryInvestment {
 
     constructor (address _virtualPowerPlantAddress) public {
         virtualPowerPlantAddress = _virtualPowerPlantAddress;
-        // VirtualPowerPlantContract = VirtualPowerPlant(_virtualPowerPlantAddress);
+        VirtualPowerPlantContract = VirtualPowerPlant(_virtualPowerPlantAddress);
     }
 
     function () external{
@@ -89,8 +89,10 @@ contract BatteryInvestment {
     }
 
     function triggerDividend () external returns (bool) {
+        require(VirtualPowerPlantContract.isAdmin() == true);
         require(remainingInvestment > 0, "No available dividends");
         uint totalDividend = (remainingInvestment * dividendPercentage) / (100);
+        remainingInvestment -= totalDividend;
         pendingTotalWithdrawals += totalDividend;
         return addPendingWithdrawals();
     }
@@ -101,13 +103,17 @@ contract BatteryInvestment {
             address currentAddress = investorsList[outer];
             uint totalCurrentInvestorAmt;
             for (uint i = 0; i < investors[currentAddress].length; i++) {
+                require(investors[currentAddress][i].investorAddress == currentAddress);
                 totalCurrentInvestorAmt += investors[currentAddress][i].investmentAmount;
             }
             uint totalUserDividend = (pendingTotalWithdrawals * totalCurrentInvestorAmt) / (totalInvestment);
-            pendingWithdrawals[currentAddress] += totalUserDividend;
             pendingTotalWithdrawals -= totalUserDividend;
+            pendingWithdrawals[currentAddress] += totalUserDividend;
             emit LogPendingWithdrawalAdded(currentAddress, totalUserDividend);
         }
+        uint tempPendingTotalWithdrawals = pendingTotalWithdrawals;
+        pendingTotalWithdrawals = 0;
+        remainingInvestment += tempPendingTotalWithdrawals;
         return true;
     }
 

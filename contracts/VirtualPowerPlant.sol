@@ -49,6 +49,7 @@ contract VirtualPowerPlant is Ownable {
         msg.sender == batteryInvestmentAddress ||
         msg.sender == batteryEnergyAddress
         , "not a valid Admin"); _; }
+
     modifier isBatteryValidModifier (uint _capacity, uint _currentFilled, uint _cost, uint _priceThreshold) {
         require(_capacity >= _currentFilled, "Capacity must exceed amount filled");
         require(batteryInvestmentContract.remainingInvestment() >= _cost, "Not enough investment to purchase");
@@ -88,6 +89,14 @@ contract VirtualPowerPlant is Ownable {
 
     // Private functions
     // ...
+
+    function isAdmin ()
+        public
+        isAdminModifier
+        returns (bool)
+    {
+        return true;
+    }
 
     function addBattery (
         uint _capacity,

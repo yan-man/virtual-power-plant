@@ -13,9 +13,164 @@ contract('VirtualPowerPlant', function(accounts) {
     let investmentAmount2 = 1500;
 
 
-    // DONE:
+    beforeEach(async () => {
+        virtualPowerPlant = await VirtualPowerPlant.deployed();
+        batteryInvestmentAddress = await (virtualPowerPlant.batteryInvestmentContract());
+        batteryEnergyAddress = await (virtualPowerPlant.batteryEnergyContract());
+        batteryInvestmentContract = await BatteryInvestment.at(batteryInvestmentAddress);
+        batteryEnergyContract = await BatteryEnergy.at(batteryEnergyAddress);
+    })
 
-  // it("...check VirtualPowerPlant owner address is correct", function() {
+    it("...check VirtualPowerPlant owner address is correct", async() => {
+        virtualPowerPlantOwnerCheck = await virtualPowerPlant.owner();
+        new Promise(() => console.log("VirtualPowerPlant owner address: " + virtualPowerPlantOwnerCheck));
+        assert.equal(virtualPowerPlantOwner, virtualPowerPlantOwnerCheck, "Owner address does not match acounts[0] from ganache");
+    });
+
+    it("...check BatteryInvestment contract is deployed", async() => {
+        let batteryInvestmentAddressCheck = await batteryInvestmentContract.address;
+        new Promise(() => console.log("BatteryInvestment address: " + batteryInvestmentAddress));
+        assert.equal(batteryInvestmentAddress, batteryInvestmentAddressCheck, "BatteryInvestment address doesn't match");
+    });
+
+    it("...check BatteryEnergy contract is deployed", async() => {
+        let batteryEnergyAddressCheck = await batteryEnergyContract.address;
+        new Promise(() => console.log("BatteryEnergy address: " + batteryEnergyAddress));
+        assert.equal(batteryEnergyAddress, batteryEnergyAddressCheck, "BatteryEnergy address doesn't match");
+    });
+
+    it("...check BatteryInvestment multiple investments from investor1 and investor2", async() => {
+        await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount1});
+        await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount2});
+        await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
+        let totalInvestment = await batteryInvestmentContract.totalInvestment();
+        checkInvestment = (investmentAmount1 + investmentAmount2 + investmentAmount2);
+        new Promise(() => console.log("totalInvestment: " + totalInvestment));
+        assert.equal(totalInvestment, checkInvestment, "Investment amount is incorrect");
+    });
+
+    it("...check set Admin", async() => {
+        await virtualPowerPlant.changeAdmin(virtualPowerPlantAdmin, true, {from: virtualPowerPlantOwner});
+        let adminsNum = await virtualPowerPlant.numAdmins();
+        adminNumCheck = 1;
+        assert.equal(adminsNum, adminNumCheck, "Admin was not added properly");
+    });
+
+    it("...check add 5 batteries to virtualPowerPlant", async() => {
+        await virtualPowerPlant.addBattery(100, 20, 13, "0x12", 7, 4, {from: virtualPowerPlantAdmin});
+        await virtualPowerPlant.addBattery(110, 25, 12, "0x12", 3, 6, {from: virtualPowerPlantOwner});
+        await virtualPowerPlant.addBattery(90, 22, 11, "0x12", 5, 8, {from: virtualPowerPlantOwner});
+        await virtualPowerPlant.addBattery(80, 30, 10, "0x12", 4, 10, {from: virtualPowerPlantOwner});
+        await virtualPowerPlant.addBattery(70, 26, 9, "0x12", 3, 11, {from: virtualPowerPlantOwner});
+        let numBatteries = await virtualPowerPlant.numBatteries();
+        new Promise(() => console.log("numBatteries: " + numBatteries));
+        let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+        new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
+        assert.equal(numBatteries, 5, "Batteries not added properly");
+    });
+
+    it("...decommission battery to virtualPowerPlant", async() => {
+        let removeIndex = 2;
+        let numBatteries1 = await virtualPowerPlant.numBatteries();
+        await virtualPowerPlant.decommissionBattery(removeIndex, {from: virtualPowerPlantOwner});
+        let numBatteries2 = await virtualPowerPlant.numBatteries();
+        new Promise(() => console.log("numBatteries went from: " + numBatteries1 + " to " + numBatteries2));
+        let newMapIndex = await virtualPowerPlant.getBatteryMapIndex(numBatteries2);
+        new Promise(() => console.log("newMapIndex of the last element in Batteries array, replacing the decommissioned index at " + removeIndex + ": " + newMapIndex));
+
+        new Promise(() => console.log("newBatteryMapping: " + newBatteryMapping));
+        assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
+    });
+
+    it("...charge array of batteries", async() => {
+
+        let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+        new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
+
+        batteryCapacityRemaining11 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining11));
+
+        batteryCapacityRemaining12 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining12));
+
+        batteryCapacityRemaining13 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining13));
+
+        batteryCapacityRemaining14 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining14));
+
+        batteryCapacityRemaining15 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining15));
+
+        checkBatteryEnergyTX = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
+        // new Promise(() => console.log(checkBatteryEnergyTX));
+
+        let remainingInvestment2 = await batteryInvestmentContract.remainingInvestment();
+        new Promise(() => console.log("remainingInvestment: " + remainingInvestment2));
+
+        batteryCapacityRemaining21 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining21));
+
+        batteryCapacityRemaining22 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining22));
+
+        batteryCapacityRemaining23 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining23));
+
+        batteryCapacityRemaining24 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining24));
+
+        batteryCapacityRemaining25 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining25));
+
+        numBatts = await virtualPowerPlant.numBatteries();
+        new Promise(() => console.log("numBatts: " + numBatts));
+        // assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
+    });
+
+    it("...trigger dividend", async() => {
+        await batteryInvestmentContract.triggerDividend({from: virtualPowerPlantAdmin});
+        let pendingWithdrawals = await batteryInvestmentContract.pendingWithdrawals(investor1, {from: virtualPowerPlantAdmin});
+        let pendingWithdrawals2 = await batteryInvestmentContract.pendingWithdrawals(investor2, {from: virtualPowerPlantAdmin});
+        let pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals({from: virtualPowerPlantAdmin});
+        new Promise(() => console.log("pendingWithdrawals: " + pendingWithdrawals));
+        new Promise(() => console.log("pendingWithdrawals2: " + pendingWithdrawals2));
+        new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals));
+
+
+        let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+        new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
+    });
+
+    it("...retrieve funds from withdrawal", async() => {
+
+        await web3.eth.getBalance(investor1, function(err,res) {
+        new Promise(() => console.log(res.toString(investor1))); // because you get a BigNumber);
+        });
+
+        let withdraw = await batteryInvestmentContract.withdraw({from: investor1});
+        // new Promise(() => console.log("pendingTotalWithdrawals: " + withdraw));
+
+
+        // let instance = await CreeptomaPresale.deployed();
+        // console.log("deployed address:" +  investor1);
+        await web3.eth.getBalance(investor1, function(err,res) {
+            new Promise(() => console.log(res.toString(investor1))); // because you get a BigNumber);
+        });
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+  // it("...retrieve funds from withdrawal", function() {
   //   return VirtualPowerPlant.deployed().then(function(instance) {
   //     virtualPowerPlant = instance;
   //     return virtualPowerPlant.owner();
@@ -23,151 +178,6 @@ contract('VirtualPowerPlant', function(accounts) {
   //         assert.equal(accounts[0], virtualPowerPlantOwner, "Owner address does not match acounts[0] from ganache");
   //       });
   // });
-
-  beforeEach(async () => {
-      virtualPowerPlant = await VirtualPowerPlant.deployed();
-      batteryInvestmentAddress = await (virtualPowerPlant.batteryInvestmentContract());
-      batteryEnergyAddress = await (virtualPowerPlant.batteryEnergyContract());
-      batteryInvestmentContract = await BatteryInvestment.at(batteryInvestmentAddress);
-      batteryEnergyContract = await BatteryEnergy.at(batteryEnergyAddress);
-  })
-
-  // DONE
-
-  // it("...check VirtualPowerPlant owner address is correct", async() => {
-  //     virtualPowerPlantOwnerCheck = await virtualPowerPlant.owner();
-  //     new Promise(() => console.log("VirtualPowerPlant owner address: " + virtualPowerPlantOwnerCheck));
-  //     assert.equal(virtualPowerPlantOwner, virtualPowerPlantOwnerCheck, "Owner address does not match acounts[0] from ganache");
-  // });
-  //
-  // it("...check BatteryInvestment contract is deployed", async() => {
-  //     let batteryInvestmentAddressCheck = await batteryInvestmentContract.address;
-  //     new Promise(() => console.log("BatteryInvestment address: " + batteryInvestmentAddress));
-  //     assert.equal(batteryInvestmentAddress, batteryInvestmentAddressCheck, "BatteryInvestment address doesn't match");
-  // });
-  //
-  // it("...check BatteryEnergy contract is deployed", async() => {
-  //     let batteryEnergyAddressCheck = await batteryEnergyContract.address;
-  //     new Promise(() => console.log("BatteryEnergy address: " + batteryEnergyAddress));
-  //     assert.equal(batteryEnergyAddress, batteryEnergyAddressCheck, "BatteryEnergy address doesn't match");
-  // });
-
-  it("...check BatteryInvestment multiple investments from investor1 and investor2", async() => {
-      await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount1});
-      await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount2});
-      await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
-      let totalInvestment = await batteryInvestmentContract.totalInvestment();
-      checkInvestment = (investmentAmount1 + investmentAmount2 + investmentAmount2);
-      new Promise(() => console.log("totalInvestment: " + totalInvestment));
-      assert.equal(totalInvestment, checkInvestment, "Investment amount is incorrect");
-  });
-
-  it("...check set Admin", async() => {
-      await virtualPowerPlant.changeAdmin(virtualPowerPlantAdmin, true, {from: virtualPowerPlantOwner});
-      let adminsNum = await virtualPowerPlant.numAdmins();
-      adminNumCheck = 1;
-      assert.equal(adminsNum, adminNumCheck, "Admin was not added properly");
-  });
-
-  it("...check add 5 batteries to virtualPowerPlant", async() => {
-      await virtualPowerPlant.addBattery(100, 20, 13, "0x12", 7, 4, {from: virtualPowerPlantAdmin});
-      await virtualPowerPlant.addBattery(110, 25, 12, "0x12", 3, 6, {from: virtualPowerPlantOwner});
-      await virtualPowerPlant.addBattery(90, 22, 11, "0x12", 5, 8, {from: virtualPowerPlantOwner});
-      await virtualPowerPlant.addBattery(80, 30, 10, "0x12", 4, 10, {from: virtualPowerPlantOwner});
-      await virtualPowerPlant.addBattery(70, 26, 9, "0x12", 3, 11, {from: virtualPowerPlantOwner});
-      let numBatteries = await virtualPowerPlant.numBatteries();
-      new Promise(() => console.log("numBatteries: " + numBatteries));
-      let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
-      new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
-      assert.equal(numBatteries, 5, "Batteries not added properly");
-  });
-
-  it("...decommission battery to virtualPowerPlant", async() => {
-      let removeIndex = 2;
-      let numBatteries1 = await virtualPowerPlant.numBatteries();
-      await virtualPowerPlant.decommissionBattery(removeIndex, {from: virtualPowerPlantOwner});
-      let numBatteries2 = await virtualPowerPlant.numBatteries();
-      new Promise(() => console.log("numBatteries went from: " + numBatteries1 + " to " + numBatteries2));
-      let newMapIndex = await virtualPowerPlant.getBatteryMapIndex(numBatteries2);
-      new Promise(() => console.log("newMapIndex of the last element in Batteries array, replacing the decommissioned index at " + removeIndex + ": " + newMapIndex));
-
-      // let newBatteryMapping = await virtualPowerPlant.batteryMapping(removeIndex);
-      // assert.equal(newBatteryMapping, numBatteries2, "Index of the item moved should be the last element in the batt array");
-
-      new Promise(() => console.log("newBatteryMapping: " + newBatteryMapping));
-      assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
-  });
-
-  it("...charge array of batteries", async() => {
-
-      let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
-      new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
-
-      batteryCapacityRemaining11 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining11));
-
-      batteryCapacityRemaining12 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining12));
-
-      batteryCapacityRemaining13 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining13));
-
-      batteryCapacityRemaining14 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining14));
-
-      batteryCapacityRemaining15 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining15));
-
-      checkBatteryEnergyTX = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
-      // new Promise(() => console.log(checkBatteryEnergyTX));
-
-      let remainingInvestment2 = await batteryInvestmentContract.remainingInvestment();
-      new Promise(() => console.log("remainingInvestment: " + remainingInvestment2));
-
-      batteryCapacityRemaining21 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining21));
-
-      batteryCapacityRemaining22 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining22));
-
-      batteryCapacityRemaining23 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining23));
-
-      batteryCapacityRemaining24 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining24));
-
-      batteryCapacityRemaining25 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
-      new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining25));
-
-      numBatts = await virtualPowerPlant.numBatteries();
-      new Promise(() => console.log("numBatts: " + numBatts));
-      // assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
-  });
-
-  // it("...trigger dividend", async() => {
-  //     await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
-  // });
-
-
-
-
-
-
-
-
-
-  // it("...check BatteryInvestment contract is deployed", function() {
-  //   return VirtualPowerPlant.deployed().then(function(instance) {
-  //     virtualPowerPlant = instance;
-  //     return virtualPowerPlant.owner();
-  //     }).then(function(virtualPowerPlantOwner) {
-  //         assert.equal(accounts[0], virtualPowerPlantOwner, "Owner address does not match acounts[0] from ganache");
-  //       });
-  // });
-
-
-
-
 
 
 
