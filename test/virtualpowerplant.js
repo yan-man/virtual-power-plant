@@ -2,17 +2,74 @@ const VirtualPowerPlant = artifacts.require("VirtualPowerPlant");
 const BatteryInvestment = artifacts.require("BatteryInvestment");
 const BatteryEnergy = artifacts.require("BatteryEnergy");
 
+/// @author Yan Man
+/// @title Test functionality for VirtualPowerPlant contract & other deployed contracts
 contract('VirtualPowerPlant', function(accounts) {
 
-    const virtualPowerPlantOwner = accounts[0];
-    const virtualPowerPlantAdmin = accounts[1];
+    // when true, will show additional info within tests. Set to false otherwise
+    const showConsoleLog = true;
+
+    const virtualPowerPlantOwner = accounts[0];  // by default, deployer of contract
+    const virtualPowerPlantAdmin = accounts[1]; // set to admin
+    // set of investors
     const investor1 = accounts[2];
     const investor2 = accounts[3];
+    const investor3 = accounts[4];
+    const investor4 = accounts[5];
 
+    // sample investment amounts in wei
     let investmentAmount1 = 1000;
     let investmentAmount2 = 1500;
+    let investmentAmount3 = 500;
+    let investmentAmount4 = 800;
 
+    // battery characteristics to add
+    let battery1 = {
+        capacity: 100,
+        currentFilled: 20,
+        cost: 13,
+        serialNumber: "0x1",
+        priceThreshold: 7,
+        chargeRate: 4
+    }
 
+    let battery2 = {
+        capacity: 110,
+        currentFilled: 25,
+        cost: 12,
+        serialNumber: "0x2",
+        priceThreshold: 10,
+        chargeRate: 6
+    }
+
+    let battery3 = {
+        capacity: 90,
+        currentFilled: 22,
+        cost: 11,
+        serialNumber: "0x3",
+        priceThreshold: 5,
+        chargeRate: 8
+    }
+
+    let battery4 = {
+        capacity: 80,
+        currentFilled: 30,
+        cost: 10,
+        serialNumber: "0x4",
+        priceThreshold: 4,
+        chargeRate: 20
+    }
+
+    let battery5 = {
+        capacity: 70,
+        currentFilled: 26,
+        cost: 9,
+        serialNumber: "0x5",
+        priceThreshold: 3,
+        chargeRate: 11
+    }
+
+    // before each test, retrieve deployed contract addresses
     beforeEach(async () => {
         virtualPowerPlant = await VirtualPowerPlant.deployed();
         batteryInvestmentAddress = await (virtualPowerPlant.batteryInvestmentContract());
@@ -21,332 +78,257 @@ contract('VirtualPowerPlant', function(accounts) {
         batteryEnergyContract = await BatteryEnergy.at(batteryEnergyAddress);
     })
 
-    it("...check VirtualPowerPlant owner address is correct", async() => {
-        virtualPowerPlantOwnerCheck = await virtualPowerPlant.owner();
-        new Promise(() => console.log("VirtualPowerPlant owner address: " + virtualPowerPlantOwnerCheck));
-        assert.equal(virtualPowerPlantOwner, virtualPowerPlantOwnerCheck, "Owner address does not match acounts[0] from ganache");
+    // preliminary tests - check contract deployment is as expected
+    it("1)...check VirtualPowerPlant owner address is correct", async() => {
+        virtualPowerPlantOwnerCheck = await virtualPowerPlant.owner(); // call public variable
+        if(showConsoleLog){new Promise(() => console.log("VirtualPowerPlant owner address: " + virtualPowerPlantOwnerCheck))};
+        assert.equal(virtualPowerPlantOwner, virtualPowerPlantOwnerCheck, "Owner address does not match accounts[0] from ganache");
     });
 
-    it("...check BatteryInvestment contract is deployed", async() => {
+    it("2)...check BatteryInvestment contract is deployed correctly", async() => {
         let batteryInvestmentAddressCheck = await batteryInvestmentContract.address;
-        new Promise(() => console.log("BatteryInvestment address: " + batteryInvestmentAddress));
-        assert.equal(batteryInvestmentAddress, batteryInvestmentAddressCheck, "BatteryInvestment address doesn't match");
+        if(showConsoleLog){new Promise(() => console.log("BatteryInvestment address: " + batteryInvestmentAddress))};
+        assert.equal(batteryInvestmentAddress, batteryInvestmentAddressCheck, "BatteryInvestment contract address incorrect");
     });
 
-    it("...check BatteryEnergy contract is deployed", async() => {
+    it("3)...check BatteryEnergy contract is deployed correctly", async() => {
         let batteryEnergyAddressCheck = await batteryEnergyContract.address;
-        new Promise(() => console.log("BatteryEnergy address: " + batteryEnergyAddress));
-        assert.equal(batteryEnergyAddress, batteryEnergyAddressCheck, "BatteryEnergy address doesn't match");
+        if(showConsoleLog){new Promise(() => console.log("BatteryEnergy address: " + batteryEnergyAddress))};
+        assert.equal(batteryEnergyAddress, batteryEnergyAddressCheck, "BatteryEnergy contract address incorrect");
     });
 
-    it("...check BatteryInvestment multiple investments from investor1 and investor2", async() => {
-        await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount1});
-        await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount2});
-        await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
-        let totalInvestment = await batteryInvestmentContract.totalInvestment();
-        checkInvestment = (investmentAmount1 + investmentAmount2 + investmentAmount2);
-        new Promise(() => console.log("totalInvestment: " + totalInvestment));
-        assert.equal(totalInvestment, checkInvestment, "Investment amount is incorrect");
-    });
-
-    it("...check set Admin", async() => {
-        await virtualPowerPlant.changeAdmin(virtualPowerPlantAdmin, true, {from: virtualPowerPlantOwner});
+    it("4)...check VirtualPowerPlant Owner can set Admin", async() => {
+        let adminsNumPre = await virtualPowerPlant.numAdmins();
+        if(showConsoleLog){new Promise(() => console.log("Prior to setting admin, # admins = " + adminsNumPre))};
+        await virtualPowerPlant.setAdmin(virtualPowerPlantAdmin, true, {from: virtualPowerPlantOwner});
         let adminsNum = await virtualPowerPlant.numAdmins();
-        adminNumCheck = 1;
+        if(showConsoleLog){new Promise(() => console.log("After setting admin, # admins = " + adminsNum))};
+        adminNumCheck = 2; // there should now two admins - owner + new admin
         assert.equal(adminsNum, adminNumCheck, "Admin was not added properly");
     });
 
-    it("...check add 5 batteries to virtualPowerPlant", async() => {
-        await virtualPowerPlant.addBattery(100, 20, 13, "0x12", 7, 4, {from: virtualPowerPlantAdmin});
-        await virtualPowerPlant.addBattery(110, 25, 12, "0x12", 3, 6, {from: virtualPowerPlantOwner});
-        await virtualPowerPlant.addBattery(90, 22, 11, "0x12", 5, 8, {from: virtualPowerPlantOwner});
-        await virtualPowerPlant.addBattery(80, 30, 10, "0x12", 4, 10, {from: virtualPowerPlantOwner});
-        await virtualPowerPlant.addBattery(70, 26, 9, "0x12", 3, 11, {from: virtualPowerPlantOwner});
+    it("5)...check BatteryInvestment multiple investments from multiple investors", async() => {
+        // test multiple investments, including multiple for a single investor
+        await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount1});
+        await batteryInvestmentContract.investMoney({from: investor2, value: investmentAmount2});
+        await batteryInvestmentContract.investMoney({from: investor3, value: investmentAmount3});
+        await batteryInvestmentContract.investMoney({from: investor4, value: investmentAmount4});
+        await batteryInvestmentContract.investMoney({from: investor1, value: investmentAmount3});
+
+        let totalInvestment = await batteryInvestmentContract.totalInvestment();
+        checkInvestment = (
+            investmentAmount1 +
+            investmentAmount2 +
+            investmentAmount3 +
+            investmentAmount4 +
+            investmentAmount3
+        );
+        if(showConsoleLog){new Promise(() => console.log("totalInvestment: " + totalInvestment))};
+        assert.equal(totalInvestment, checkInvestment, "totalInvestment amount is incorrect");
+    });
+
+    it("6)...check BatteryInvestment investments were saved correctly", async() => {
+
+        let investorAmountTest = await batteryInvestmentContract.getInvestorInvestment(investor1, 1);
+        if(showConsoleLog){new Promise(() => console.log("First investor's second investorAmount: " + investorAmountTest))};
+        assert.equal(investorAmountTest, investmentAmount3, "Investment amount is incorrect");
+    });
+
+    it("7)...check Admin can add 5 batteries to virtualPowerPlant", async() => {
+
+        await virtualPowerPlant.addBattery(
+            battery1.capacity,
+            battery1.currentFilled,
+            battery1.cost,
+            battery1.serialNumber,
+            battery1.priceThreshold,
+            battery1.chargeRate,
+            {from: virtualPowerPlantAdmin}
+        );
+        await virtualPowerPlant.addBattery(
+            battery2.capacity,
+            battery2.currentFilled,
+            battery2.cost,
+            battery2.serialNumber,
+            battery2.priceThreshold,
+            battery2.chargeRate,
+            {from: virtualPowerPlantOwner}
+        );
+        await virtualPowerPlant.addBattery(
+            battery3.capacity,
+            battery3.currentFilled,
+            battery3.cost,
+            battery3.serialNumber,
+            battery3.priceThreshold,
+            battery3.chargeRate,
+            {from: virtualPowerPlantOwner}
+        );
+        await virtualPowerPlant.addBattery(
+            battery4.capacity,
+            battery4.currentFilled,
+            battery4.cost,
+            battery4.serialNumber,
+            battery4.priceThreshold,
+            battery4.chargeRate,
+            {from: virtualPowerPlantOwner}
+        );
+        await virtualPowerPlant.addBattery(
+            battery5.capacity,
+            battery5.currentFilled,
+            battery5.cost,
+            battery5.serialNumber,
+            battery5.priceThreshold,
+            battery5.chargeRate,
+            {from: virtualPowerPlantOwner}
+        );
         let numBatteries = await virtualPowerPlant.numBatteries();
-        new Promise(() => console.log("numBatteries: " + numBatteries));
+        if(showConsoleLog){new Promise(() => console.log("numBatteries after adding batteries: " + numBatteries))};
         let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
-        new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
+        if(showConsoleLog){new Promise(() => console.log("remainingInvestment after battery purchases: " + remainingInvestment))};
         assert.equal(numBatteries, 5, "Batteries not added properly");
     });
 
-    it("...decommission battery to virtualPowerPlant", async() => {
-        let removeIndex = 2;
+    it("8)...check that Admin can decommission battery", async() => {
+        let removeIndex = 2; // index of battery to decommission
         let numBatteries1 = await virtualPowerPlant.numBatteries();
         await virtualPowerPlant.decommissionBattery(removeIndex, {from: virtualPowerPlantOwner});
         let numBatteries2 = await virtualPowerPlant.numBatteries();
-        new Promise(() => console.log("numBatteries went from: " + numBatteries1 + " to " + numBatteries2));
+        if(showConsoleLog){new Promise(() => console.log("numBatteries went from: " + numBatteries1 + " to " + numBatteries2))};
         let newMapIndex = await virtualPowerPlant.getBatteryMapIndex(numBatteries2);
-        new Promise(() => console.log("newMapIndex of the last element in Batteries array, replacing the decommissioned index at " + removeIndex + ": " + newMapIndex));
+        if(showConsoleLog){new Promise(() => console.log("newMapIndex of the last element in Batteries array, replacing the decommissioned index at " + removeIndex + ": " + newMapIndex))};
 
-        new Promise(() => console.log("newBatteryMapping: " + newBatteryMapping));
+        let newBatteryMapping = await virtualPowerPlant.batteryMapping(removeIndex);
+        if(showConsoleLog){new Promise(() => console.log("newBatteryMapping at replaced index should be the last battery which was moved there (4): " + newBatteryMapping))};
         assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
-    });
-
-    it("...charge array of batteries", async() => {
-
-        let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
-        new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
-
-        batteryCapacityRemaining11 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining11));
-
-        batteryCapacityRemaining12 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining12));
-
-        batteryCapacityRemaining13 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining13));
-
-        batteryCapacityRemaining14 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining14));
-
-        batteryCapacityRemaining15 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining1: " + batteryCapacityRemaining15));
-
-        checkBatteryEnergyTX = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
-        // new Promise(() => console.log(checkBatteryEnergyTX));
-
-        let remainingInvestment2 = await batteryInvestmentContract.remainingInvestment();
-        new Promise(() => console.log("remainingInvestment: " + remainingInvestment2));
-
-        batteryCapacityRemaining21 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining21));
-
-        batteryCapacityRemaining22 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining22));
-
-        batteryCapacityRemaining23 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining23));
-
-        batteryCapacityRemaining24 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining24));
-
-        batteryCapacityRemaining25 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("batteryCapacityRemaining2: " + batteryCapacityRemaining25));
 
         numBatts = await virtualPowerPlant.numBatteries();
-        new Promise(() => console.log("numBatts: " + numBatts));
-        // assert.equal(removeIndex, newMapIndex, "The index removed should match the updated map index of the last element");
+        if(showConsoleLog){new Promise(() => console.log("Number of batteries after decommission: " + numBatts))};
+        assert.equal(numBatts, 4, "After decommission, # of batteries should decrease by 1");
+    });
+
+    it("9)...charge the array of batteries", async() => {
+
+        let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+        if(showConsoleLog){new Promise(() => console.log("Initial remainingInvestment: " + remainingInvestment))};
+
+        batteryCapacityRemaining11 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery1: " + batteryCapacityRemaining11))};
+        batteryCapacityRemaining12 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery2: " + batteryCapacityRemaining12))};
+        batteryCapacityRemaining13 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery3: " + batteryCapacityRemaining13))};
+        batteryCapacityRemaining14 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery4: " + batteryCapacityRemaining14))};
+        batteryCapacityRemaining15 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery5: " + batteryCapacityRemaining15))};
+
+        checkBatteryEnergyTX = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
+        let remainingInvestment2 = await batteryInvestmentContract.remainingInvestment();
+        new Promise(() => console.log("remainingInvestment after energy transactions for charging/discharging: " + remainingInvestment2));
+
+        batteryCapacityRemaining21 = await virtualPowerPlant.getBatteryCapacityRemaining(0, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery1: " + batteryCapacityRemaining21))};
+        batteryCapacityRemaining22 = await virtualPowerPlant.getBatteryCapacityRemaining(1, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery2: " + batteryCapacityRemaining22))};
+        batteryCapacityRemaining23 = await virtualPowerPlant.getBatteryCapacityRemaining(2, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery3: " + batteryCapacityRemaining23))};
+        batteryCapacityRemaining24 = await virtualPowerPlant.getBatteryCapacityRemaining(3, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery4: " + batteryCapacityRemaining24))};
+        batteryCapacityRemaining25 = await virtualPowerPlant.getBatteryCapacityRemaining(4, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery5: " + batteryCapacityRemaining25))};
+
+        let remainingInvestmentExpected = (
+            remainingInvestment
+            - (5 * battery1.chargeRate)
+            - (5 * battery2.chargeRate)
+            + (5 * battery4.chargeRate)
+            + (5 * battery5.chargeRate)
+        );
+
+        assert.equal(remainingInvestment2, remainingInvestmentExpected, "Total transaction remaining amount should equal");
     });
 
     it("...trigger dividend", async() => {
+        let totalInvestment = await batteryInvestmentContract.totalInvestment();
+        // let remainingInvestmentInitial = await batteryInvestmentContract.remainingInvestment();
         await batteryInvestmentContract.triggerDividend({from: virtualPowerPlantAdmin});
-        let pendingWithdrawals = await batteryInvestmentContract.pendingWithdrawals(investor1, {from: virtualPowerPlantAdmin});
+        let pendingWithdrawals1 = await batteryInvestmentContract.pendingWithdrawals(investor1, {from: virtualPowerPlantAdmin});
         let pendingWithdrawals2 = await batteryInvestmentContract.pendingWithdrawals(investor2, {from: virtualPowerPlantAdmin});
+        let pendingWithdrawals3 = await batteryInvestmentContract.pendingWithdrawals(investor3, {from: virtualPowerPlantAdmin});
+        let pendingWithdrawals4 = await batteryInvestmentContract.pendingWithdrawals(investor4, {from: virtualPowerPlantAdmin});
         let pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals({from: virtualPowerPlantAdmin});
-        new Promise(() => console.log("pendingWithdrawals: " + pendingWithdrawals));
-        new Promise(() => console.log("pendingWithdrawals2: " + pendingWithdrawals2));
-        new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals));
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor1: " + pendingWithdrawals1))};
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor2: " + pendingWithdrawals2))};
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor3: " + pendingWithdrawals3))};
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor4: " + pendingWithdrawals4))};
 
+        if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
 
         let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
-        new Promise(() => console.log("remainingInvestment: " + remainingInvestment));
+        if(showConsoleLog){new Promise(() => console.log("remainingInvestment after dividends: " + remainingInvestment))};
+
+        let totalDividend = (2 * remainingInvestment)/100;
+        let expectedInvestor1Dividends = Math.ceil(((investmentAmount1 + investmentAmount3) * totalDividend) / (totalInvestment));
+
+        if(showConsoleLog){new Promise(() => console.log("Expected dividends for investor1: " + expectedInvestor1Dividends))};
+        assert.equal(pendingWithdrawals1, expectedInvestor1Dividends, "Dividend for investor1 incorrect");
     });
 
     it("...retrieve funds from withdrawal", async() => {
 
-        await web3.eth.getBalance(investor1, function(err,res) {
-        new Promise(() => console.log(res.toString(investor1))); // because you get a BigNumber);
-        });
 
-        let withdraw = await batteryInvestmentContract.withdraw({from: investor1});
-        // new Promise(() => console.log("pendingTotalWithdrawals: " + withdraw));
+        // let balance1 = await web3.eth.getBalance(investor1);
+        // let withdrawTX = await batteryInvestmentContract.withdraw({from: investor1});
+        // let balance2 = await web3.eth.getBalance(investor1);
+        // if(showConsoleLog){new Promise(() => console.log(balance1))}; // because you get a BigNumber);
+        // if(showConsoleLog){new Promise(() => console.log(balance2))}; // because you get a BigNumber);
+        // if(showConsoleLog){new Promise(() => console.log(withdrawTX))}; // because you get a BigNumber);
 
 
-        // let instance = await CreeptomaPresale.deployed();
-        // console.log("deployed address:" +  investor1);
-        await web3.eth.getBalance(investor1, function(err,res) {
-            new Promise(() => console.log(res.toString(investor1))); // because you get a BigNumber);
-        });
+
+
+
+        // BALANCE BEFORE TX
+        var balanceBefore = await web3.eth.getBalance(investor1);
+        balanceBefore = web3.utils.fromWei(balanceBefore, 'wei');
+        // balanceBefore = balanceBefore.toString(10);
+        console.log(balanceBefore);
+        // console.log(b);
+
+        // let hash = await contract.buy.sendTransaction({from: investor1});
+        let hash = await batteryInvestmentContract.withdraw({from: investor1});
+        //
+        // // BALANCE AFTER TX
+        var balanceAfter = await (web3.eth.getBalance(investor1));
+        balanceAfter = web3.utils.fromWei(balanceAfter, 'wei');
+        // balanceAfter = balanceAfter.toString(10);
+        console.log(balanceAfter);
+        //
+        //
+        //
+        let tx = await web3.eth.getTransaction(hash.tx);
+        // // console.log(tx.gasPrice);
+        // // console.log(hash.receipt.gasUsed);
+        //
+        let gasPrice = tx.gasPrice;
+        let gasUsed = hash.receipt.gasUsed;
+        let gasCost = (gasPrice * gasUsed);
+
+        console.log(gasCost);
+        //
+        let total = (balanceAfter - balanceBefore);
+        console.log(total);
+
+        // const receipt = await hash.receipt;
+        // console.log(receipt);
+        // const gasCost = tx.gasPrice.mul(receipt.gasUsed);
+        // console.log("BEFORE", balanceBefore.toNumber());
+        // console.log("gas price", tx.gasPrice.toNumber());
+        // console.log("gas used", gasUsed);
+        // console.log("gas cost", gasCost.toNumber());
+        // console.log("AFTER", balanceAfter.toNumber());
+        // console.log("CHECKSUM", balanceAfter.add(gasCost).add(amount).toNumber());
+
     });
 
-
-
-
-
-
-
-
-
-
-
-
-  // it("...retrieve funds from withdrawal", function() {
-  //   return VirtualPowerPlant.deployed().then(function(instance) {
-  //     virtualPowerPlant = instance;
-  //     return virtualPowerPlant.owner();
-  //     }).then(function(virtualPowerPlantOwner) {
-  //         assert.equal(accounts[0], virtualPowerPlantOwner, "Owner address does not match acounts[0] from ganache");
-  //       });
-  // });
-
-
-
-
-
-
-  // it("...check deployed Battery Investment Contract", function() {
-  //   return VirtualPowerPlant.deployed().then(function(instance) {
-  //       let batteryInvestmentAddress;
-  //       let batteryInvestmentAddressCheck;
-  //
-  //     virtualPowerPlant = instance;
-  //     return virtualPowerPlant.batteryInvestmentAddress();
-  //     }).then(function(batteryInvestmentAddress) {
-  //         return batteryInvestmentAddressCheck;
-  //     }).then(function(batteryInvestmentAddressCheck) {
-  //         assert.equal(batteryInvestmentAddressCheck, batteryInvestmentAddress, "BI address is incorrect");
-  //       });
-  // });
-
-  // it("...check deployed Battery Investment Contract", async () => {
-  //     // let batteryInvestment = await BatteryInvestment.deployed();
-  //     // let virtualPowerPlant = await VirtualPowerPlant.deployed();
-  //     // const batteryInvestment = await BatteryInvestment.at(virtualPowerPlant.batteryInvestmentAddress());
-  //
-  //     // assert(virtualPowerPlant.batteryInvestmentAddress(), virtualPowerPlant.batteryInvestmentContract().address, "addresses match");
-  //
-  //     let owner = await virtualPowerPlant.owner();
-  //     let vplant = await (virtualPowerPlant.batteryInvestmentContract());
-  //
-  //     const bi = await BatteryInvestment.at(vplant);
-  //     let test = await bi.totalInvestment();
-  //
-  //     // let instance = await BatteryInvestment.deployed();
-  //
-  //     // let next = await vplant.virtualPowerPlantAddress();
-  //
-  //     // emit LogNew(vplant.address);
-  //
-  //     // assert(owner, next, "addresses match");
-  //
-  //     // return virtualPowerPlant.batteryInvestmentAddress();
-  //     new Promise(() => console.log(test))
-  //     // new Promise(() => console.log(vplant))
-  //
-  // });
-
 });
-
-
-
-
-
-// var A = artifacts.require("./A.sol");
-// var B = artifacts.require("./B.sol");
-// contract('A', (accounts) => {
-//     it("Value should be 5", async () => {
-//         let instanceOfA = await A.deployed()
-//         let resultTx = await instanceOfA.createB({ from: accounts[0] });
-//         console.log("Address of B: " + resultTx.logs[0].args.addressOfB);
-//
-//         let instanceOfB = await B.at(resultTx.logs[0].args.addressOfB);
-//
-//     })
-// })
-
-
-// const SimpleStorage = artifacts.require("./SimpleStorage.sol");
-// const MetaCoin = artifacts.require("MetaCoin");
-//
-// contract('SimpleStorage', function(accounts) {
-//
-//   it("...should store the value 89.", function() {
-//     return SimpleStorage.deployed().then(function(instance) {
-//       simpleStorageInstance = instance;
-//
-//       return simpleStorageInstance.set(89, {from: accounts[0]});
-//     }).then(function() {
-//       return simpleStorageInstance.get.call();
-//     }).then(function(storedData) {
-//       assert.equal(storedData, 89, "The value 89 was not stored.");
-//     });
-//   });
-//
-// });
-//
-// contract("MetaCoin", accounts => {
-//   it("should put 10000 MetaCoin in the first account", () =>
-//     MetaCoin.deployed()
-//       .then(instance => instance.getBalance.call(accounts[0]))
-//       .then(balance => {
-//         assert.equal(
-//           balance.valueOf(),
-//           10000,
-//           "10000 wasn't in the first account"
-//         );
-//       }));
-//
-//   it("should call a function that depends on a linked library", () => {
-//     let meta;
-//     let metaCoinBalance;
-//     let metaCoinEthBalance;
-//
-//     return MetaCoin.deployed()
-//       .then(instance => {
-//         meta = instance;
-//         return meta.getBalance.call(accounts[0]);
-//       })
-//       .then(outCoinBalance => {
-//         metaCoinBalance = outCoinBalance.toNumber();
-//         return meta.getBalanceInEth.call(accounts[0]);
-//       })
-//       .then(outCoinBalanceEth => {
-//         metaCoinEthBalance = outCoinBalanceEth.toNumber();
-//       })
-//       .then(() => {
-//         assert.equal(
-//           metaCoinEthBalance,
-//           2 * metaCoinBalance,
-//           "Library function returned unexpected function, linkage may be broken"
-//         );
-//       });
-//   });
-//
-//   it("should send coin correctly", () => {
-//     let meta;
-//
-//     // Get initial balances of first and second account.
-//     const account_one = accounts[0];
-//     const account_two = accounts[1];
-//
-//     let account_one_starting_balance;
-//     let account_two_starting_balance;
-//     let account_one_ending_balance;
-//     let account_two_ending_balance;
-//
-//     const amount = 10;
-//
-//     return MetaCoin.deployed()
-//       .then(instance => {
-//         meta = instance;
-//         return meta.getBalance.call(account_one);
-//       })
-//       .then(balance => {
-//         account_one_starting_balance = balance.toNumber();
-//         return meta.getBalance.call(account_two);
-//       })
-//       .then(balance => {
-//         account_two_starting_balance = balance.toNumber();
-//         return meta.sendCoin(account_two, amount, { from: account_one });
-//       })
-//       .then(() => meta.getBalance.call(account_one))
-//       .then(balance => {
-//         account_one_ending_balance = balance.toNumber();
-//         return meta.getBalance.call(account_two);
-//       })
-//       .then(balance => {
-//         account_two_ending_balance = balance.toNumber();
-//
-//         assert.equal(
-//           account_one_ending_balance,
-//           account_one_starting_balance - amount,
-//           "Amount wasn't correctly taken from the sender"
-//         );
-//         assert.equal(
-//           account_two_ending_balance,
-//           account_two_starting_balance + amount,
-//           "Amount wasn't correctly sent to the receiver"
-//         );
-//       });
-//   });
-// });

@@ -59,6 +59,14 @@ contract BatteryInvestment {
     // Private functions
     // ...
 
+    function getInvestorInvestment (address investorAddress, uint index)
+        external
+        view
+        returns (uint returnInvestment)
+    {
+        returnInvestment = investors[investorAddress][index].investmentAmount;
+    }
+
     function updateRemainingInvestment (uint _remainingInvestment) external returns (bool) {
         remainingInvestment = _remainingInvestment;
         return true;
@@ -70,8 +78,10 @@ contract BatteryInvestment {
         enoughInvestmentModifier
     {
         uint investAmount = msg.value;
+        if(investors[msg.sender].length == 0){
+            investorsList.push(msg.sender);
+        }
         investors[msg.sender].push(Investment({investorAddress: msg.sender, timestamp: now, investmentAmount: investAmount}));
-        investorsList.push(msg.sender);
         // investors[msg.sender]ot += investAmount;
         totalInvestment += investAmount;
         remainingInvestment += investAmount;
@@ -86,6 +96,7 @@ contract BatteryInvestment {
         pendingWithdrawals[msg.sender] = 0;
         msg.sender.transfer(withdrawalAmount);
         emit LogWithdrawalMade(msg.sender, withdrawalAmount);
+        // return true;
     }
 
     function triggerDividend () external returns (bool) {
@@ -97,19 +108,22 @@ contract BatteryInvestment {
         return addPendingWithdrawals();
     }
 
+    // event LogTest (uint index, uint investmentAmount);
+
     function addPendingWithdrawals () internal returns (bool) {
 
         for (uint outer = 0; outer < investorsList.length; outer++) {
             address currentAddress = investorsList[outer];
-            uint totalCurrentInvestorAmt;
+            uint totalCurrentInvestorAmt = 0;
             for (uint i = 0; i < investors[currentAddress].length; i++) {
                 require(investors[currentAddress][i].investorAddress == currentAddress);
                 totalCurrentInvestorAmt += investors[currentAddress][i].investmentAmount;
+                // emit LogTest(outer, totalCurrentInvestorAmt);
             }
             uint totalUserDividend = (pendingTotalWithdrawals * totalCurrentInvestorAmt) / (totalInvestment);
             pendingTotalWithdrawals -= totalUserDividend;
             pendingWithdrawals[currentAddress] += totalUserDividend;
-            emit LogPendingWithdrawalAdded(currentAddress, totalUserDividend);
+            emit LogPendingWithdrawalAdded(currentAddress, pendingWithdrawals[currentAddress]);
         }
         uint tempPendingTotalWithdrawals = pendingTotalWithdrawals;
         pendingTotalWithdrawals = 0;

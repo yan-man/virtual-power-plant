@@ -20,8 +20,8 @@ contract BatteryEnergy {
     // Events
     // event Log(uint counter);
     event LogBatteryCheck(uint batteryID);
-    event LogEnergyPurchased(bytes32 serialNumber, uint energyPurchased, uint energyPrice, uint remainingInvestment);
-    event LogEnergySold(bytes32 serialNumber, uint energyPurchased, uint energyPrice, uint remainingInvestment);
+    event LogEnergyPurchased(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
+    event LogEnergySold(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
 
 
     constructor (address _virtualPowerPlantAddress) public {
@@ -129,7 +129,7 @@ contract BatteryEnergy {
         uint emptyCapacity = _capacity - _currentFilled;
 
         if (_chargeBattery == true) {
-            require(emptyCapacity > 0, "Battery should have empty capacity for charge");
+            require(emptyCapacity > 0, "Battery should have remaining capacity in order to charge");
 
             calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), emptyCapacity);
             uint remainingInvestment = (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment();
@@ -173,7 +173,7 @@ contract BatteryEnergy {
         require(newRemainingInvestment >= 0, "Not enough money to make this purchase");
         if ((VirtualPowerPlantContract.batteryInvestmentContract()).updateRemainingInvestment(newRemainingInvestment)) {
             // remainingInvestment = newRemainingInvestment;
-            VirtualPowerPlantContract.chargeBattery(_batteryID, _energyAmountToPurchase);
+            VirtualPowerPlantContract.chargeBattery(_batteryID, -_energyAmountToPurchase);
             return true;
         }
         return false;
@@ -188,7 +188,7 @@ contract BatteryEnergy {
             )
         );
         if ((VirtualPowerPlantContract.batteryInvestmentContract()).updateRemainingInvestment(newRemainingInvestment)) {
-            VirtualPowerPlantContract.chargeBattery(_batteryID, -_energyAmountToSell);
+            VirtualPowerPlantContract.chargeBattery(_batteryID, _energyAmountToSell);
             return true;
         }
         return false;

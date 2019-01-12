@@ -18,7 +18,7 @@ contract VirtualPowerPlant is Ownable {
         uint priceThreshold;
         uint chargeRate;
         bool isActive;
-        uint mapIndex;
+        uint mapIndex; // corresponds to the battery's index in batteryMapping
     }
     Battery[] public batteries; //internal
     Battery[] public decommissionedBatteries; //internal
@@ -32,7 +32,7 @@ contract VirtualPowerPlant is Ownable {
     uint public numBatteries = 0;
     uint public numAdmins = 0;
     uint public dividendPercentage;
-    uint[] public batteryMapping;
+    uint[] public batteryMapping; // array of battery's index in Battery
     mapping(address => bool) public admins;
 
     // Events
@@ -60,7 +60,7 @@ contract VirtualPowerPlant is Ownable {
     constructor () public {
         // owner = msg.sender;
         dividendPercentage = 1;
-        admins[msg.sender] = true;
+        setAdmin(msg.sender, true);
         virtualPowerPlantAddress = address(this);
         batteryInvestmentContract = new BatteryInvestment(virtualPowerPlantAddress);
         batteryInvestmentAddress = address(batteryInvestmentContract);
@@ -92,6 +92,7 @@ contract VirtualPowerPlant is Ownable {
 
     function isAdmin ()
         public
+        view
         isAdminModifier
         returns (bool)
     {
@@ -210,7 +211,7 @@ contract VirtualPowerPlant is Ownable {
         return batteries[_batteryID].mapIndex;
     }
 
-    function changeAdmin (address _newAdminAddress, bool _adminStatus)
+    function setAdmin (address _newAdminAddress, bool _adminStatus)
         public
         onlyOwner
     {
