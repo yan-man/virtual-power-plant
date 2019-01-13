@@ -18,54 +18,54 @@ contract('VirtualPowerPlant', function(accounts) {
     const investor4 = accounts[5];
 
     // sample investment amounts in wei
-    let investmentAmount1 = 1000;
-    let investmentAmount2 = 1500;
-    let investmentAmount3 = 500;
-    let investmentAmount4 = 800;
+    let investmentAmount1 = 10e6;
+    let investmentAmount2 = 15e6;
+    let investmentAmount3 = 5e6;
+    let investmentAmount4 = 8e6;
 
     // battery characteristics to add
     let battery1 = {
         capacity: 100,
         currentFilled: 20,
-        cost: 13,
+        cost: 13e5,
         serialNumber: "0x1",
-        priceThreshold: 7,
+        priceThreshold: 7e3,
         chargeRate: 4
     }
 
     let battery2 = {
         capacity: 110,
         currentFilled: 25,
-        cost: 12,
+        cost: 12e5,
         serialNumber: "0x2",
-        priceThreshold: 10,
+        priceThreshold: 10e3,
         chargeRate: 6
     }
 
     let battery3 = {
         capacity: 90,
         currentFilled: 22,
-        cost: 11,
+        cost: 11e5,
         serialNumber: "0x3",
-        priceThreshold: 5,
+        priceThreshold: 5e3,
         chargeRate: 8
     }
 
     let battery4 = {
         capacity: 80,
         currentFilled: 30,
-        cost: 10,
+        cost: 10e5,
         serialNumber: "0x4",
-        priceThreshold: 4,
+        priceThreshold: 4e3,
         chargeRate: 20
     }
 
     let battery5 = {
         capacity: 70,
         currentFilled: 26,
-        cost: 9,
+        cost: 9e5,
         serialNumber: "0x5",
-        priceThreshold: 3,
+        priceThreshold: 3e3,
         chargeRate: 11
     }
 
@@ -239,96 +239,210 @@ contract('VirtualPowerPlant', function(accounts) {
 
         let remainingInvestmentExpected = (
             remainingInvestment
-            - (5 * battery1.chargeRate)
-            - (5 * battery2.chargeRate)
-            + (5 * battery4.chargeRate)
-            + (5 * battery5.chargeRate)
+            - (5e3 * battery1.chargeRate)
+            - (5e3 * battery2.chargeRate)
+            + (5e3 * battery4.chargeRate)
+            + (5e3 * battery5.chargeRate)
         );
 
         assert.equal(remainingInvestment2, remainingInvestmentExpected, "Total transaction remaining amount should equal");
     });
 
-    it("...trigger dividend", async() => {
+    it("10)...trigger dividend and withdraw for multiple investors", async() => {
         let totalInvestment = await batteryInvestmentContract.totalInvestment();
-        // let remainingInvestmentInitial = await batteryInvestmentContract.remainingInvestment();
+        let remainingInvestmentInitial = await batteryInvestmentContract.remainingInvestment();
         await batteryInvestmentContract.triggerDividend({from: virtualPowerPlantAdmin});
-        let pendingWithdrawals1 = await batteryInvestmentContract.pendingWithdrawals(investor1, {from: virtualPowerPlantAdmin});
-        let pendingWithdrawals2 = await batteryInvestmentContract.pendingWithdrawals(investor2, {from: virtualPowerPlantAdmin});
-        let pendingWithdrawals3 = await batteryInvestmentContract.pendingWithdrawals(investor3, {from: virtualPowerPlantAdmin});
-        let pendingWithdrawals4 = await batteryInvestmentContract.pendingWithdrawals(investor4, {from: virtualPowerPlantAdmin});
-        let pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals({from: virtualPowerPlantAdmin});
-        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor1: " + pendingWithdrawals1))};
-        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor2: " + pendingWithdrawals2))};
-        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor3: " + pendingWithdrawals3))};
-        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor4: " + pendingWithdrawals4))};
+        if(showConsoleLog){new Promise(() => console.log("remainingInvestment after dividends: " + remainingInvestmentInitial))};
 
-        if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
-
-        let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
-        if(showConsoleLog){new Promise(() => console.log("remainingInvestment after dividends: " + remainingInvestment))};
-
-        let totalDividend = (2 * remainingInvestment)/100;
-        let expectedInvestor1Dividends = Math.ceil(((investmentAmount1 + investmentAmount3) * totalDividend) / (totalInvestment));
-
-        if(showConsoleLog){new Promise(() => console.log("Expected dividends for investor1: " + expectedInvestor1Dividends))};
-        assert.equal(pendingWithdrawals1, expectedInvestor1Dividends, "Dividend for investor1 incorrect");
-    });
-
-    it("...retrieve funds from withdrawal", async() => {
-
-
-        // let balance1 = await web3.eth.getBalance(investor1);
-        // let withdrawTX = await batteryInvestmentContract.withdraw({from: investor1});
-        // let balance2 = await web3.eth.getBalance(investor1);
-        // if(showConsoleLog){new Promise(() => console.log(balance1))}; // because you get a BigNumber);
-        // if(showConsoleLog){new Promise(() => console.log(balance2))}; // because you get a BigNumber);
-        // if(showConsoleLog){new Promise(() => console.log(withdrawTX))}; // because you get a BigNumber);
-
-
-
-
-
-        // BALANCE BEFORE TX
-        var balanceBefore = await web3.eth.getBalance(investor1);
-        balanceBefore = web3.utils.fromWei(balanceBefore, 'wei');
-        // balanceBefore = balanceBefore.toString(10);
-        console.log(balanceBefore);
-        // console.log(b);
-
-        // let hash = await contract.buy.sendTransaction({from: investor1});
-        let hash = await batteryInvestmentContract.withdraw({from: investor1});
+        let pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals(0, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals0: " + pendingTotalWithdrawals))};
+        let pendingTotalWithdrawals2 = await batteryInvestmentContract.pendingTotalWithdrawals(1, {from: virtualPowerPlantAdmin});
+        if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals1: " + pendingTotalWithdrawals2))};
         //
-        // // BALANCE AFTER TX
-        var balanceAfter = await (web3.eth.getBalance(investor1));
-        balanceAfter = web3.utils.fromWei(balanceAfter, 'wei');
-        // balanceAfter = balanceAfter.toString(10);
-        console.log(balanceAfter);
+        // let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+        // if(showConsoleLog){new Promise(() => console.log("remainingInvestment after dividends: " + remainingInvestment))};
         //
-        //
-        //
-        let tx = await web3.eth.getTransaction(hash.tx);
-        // // console.log(tx.gasPrice);
-        // // console.log(hash.receipt.gasUsed);
-        //
+        // let totalDividendExpected = (2 * remainingInvestmentInitial)/100;
+        // if(showConsoleLog){new Promise(() => console.log("totalDividend: " + totalDividendExpected))};
+        // assert.equal(totalDividendExpected, pendingTotalWithdrawals, "Total withdrawable dividends incorrect");
+
+        await batteryInvestmentContract.addPendingWithdrawals(investor1, {from: virtualPowerPlantAdmin});
+        await batteryInvestmentContract.addPendingWithdrawals(investor2, {from: virtualPowerPlantAdmin});
+        await batteryInvestmentContract.addPendingWithdrawals(investor3, {from: virtualPowerPlantAdmin});
+
+        let pendingWithdrawal1 = await batteryInvestmentContract.pendingWithdrawals(investor1);
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal1: " + pendingWithdrawal1))};
+
+        let pendingWithdrawal2 = await batteryInvestmentContract.pendingWithdrawals(investor2);
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal2: " + pendingWithdrawal2))};
+
+        let pendingWithdrawal3 = await batteryInvestmentContract.pendingWithdrawals(investor3);
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal3: " + pendingWithdrawal3))};
+
+        // await batteryInvestmentContract.triggerDividend({from: virtualPowerPlantAdmin});
+
+        let balance1 = await web3.eth.getBalance(investor2);
+        let withdrawTX1 = await batteryInvestmentContract.withdraw({from: investor2});
+        let balance2 = await web3.eth.getBalance(investor2);
+
+        pendingWithdrawal2 = await batteryInvestmentContract.pendingWithdrawals(investor2);
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal2: " + pendingWithdrawal2))};
+
+
+        let tx = await web3.eth.getTransaction(withdrawTX1.tx);
         let gasPrice = tx.gasPrice;
-        let gasUsed = hash.receipt.gasUsed;
+        let gasUsed = withdrawTX1.receipt.gasUsed;
         let gasCost = (gasPrice * gasUsed);
 
+        balance1 = balance1.toString(10);
+        balance2 = balance2.toString(10);
+
+        // balance1 - balance2 - gasCost
+
+        // balance2 = (balance2) + gasCost;
+
         console.log(gasCost);
+        // let total = balance2 - balance1 +
+        console.log(balance1 - balance2 - gasCost);
+        // console.log(balance2);
+
+        // pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals(1, {from: virtualPowerPlantAdmin});
+        // if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
+        // pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals(0, {from: virtualPowerPlantAdmin});
+        // if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
+
+        // let balance3 = await web3.eth.getBalance(investor1);
+        // let withdrawTX2 = await batteryInvestmentContract.withdraw({from: investor1});
+        // let balance4 = await web3.eth.getBalance(investor1);
         //
-        let total = (balanceAfter - balanceBefore);
-        console.log(total);
+        // pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals({from: virtualPowerPlantAdmin});
+        // if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
 
-        // const receipt = await hash.receipt;
-        // console.log(receipt);
-        // const gasCost = tx.gasPrice.mul(receipt.gasUsed);
-        // console.log("BEFORE", balanceBefore.toNumber());
-        // console.log("gas price", tx.gasPrice.toNumber());
-        // console.log("gas used", gasUsed);
-        // console.log("gas cost", gasCost.toNumber());
-        // console.log("AFTER", balanceAfter.toNumber());
-        // console.log("CHECKSUM", balanceAfter.add(gasCost).add(amount).toNumber());
 
+
+
+        // let expectedInvestor1Dividends = Math.ceil(((investmentAmount1 + investmentAmount3) * pendingTotalWithdrawals) / (totalInvestment));
+        // let expectedInvestor2Dividends = Math.ceil((investmentAmount2 * pendingTotalWithdrawals) / (totalInvestment));
+        // let expectedInvestor3Dividends = Math.ceil((investmentAmount3 * pendingTotalWithdrawals) / (totalInvestment));
+        // let expectedInvestor4Dividends = Math.ceil((investmentAmount4 * pendingTotalWithdrawals) / (totalInvestment));
+        //
+        //
+        //
+        // if(showConsoleLog){new Promise(() => console.log("Expected dividends for investor1: " + expectedInvestor1Dividends))};
+        // // assert.equal(30, expectedInvestor1Dividends, "Dividend for investor1 incorrect");
+        //
+        // if(showConsoleLog){new Promise(() => console.log("Expected dividends for investor2: " + expectedInvestor2Dividends))};
+        // // assert.equal(pendingWithdrawals1, expectedInvestor1Dividends, "Dividend for investor1 incorrect");
+        //
+        // if(showConsoleLog){new Promise(() => console.log("Expected dividends for investor2: " + expectedInvestor3Dividends))};
+        // if(showConsoleLog){new Promise(() => console.log("Expected dividends for investor2: " + expectedInvestor4Dividends))};
     });
+
+
+
+
+    // it("...trigger dividend and withdraw for multiple investors", async() => {
+    //     let totalInvestment = await batteryInvestmentContract.totalInvestment();
+    //     // let remainingInvestmentInitial = await batteryInvestmentContract.remainingInvestment();
+    //     await batteryInvestmentContract.triggerDividend({from: virtualPowerPlantAdmin});
+    //     // let pendingWithdrawals1 = await batteryInvestmentContract.pendingWithdrawals(investor1, {from: virtualPowerPlantAdmin});
+    //     // let pendingWithdrawals2 = await batteryInvestmentContract.pendingWithdrawals(investor2, {from: virtualPowerPlantAdmin});
+    //     // let pendingWithdrawals3 = await batteryInvestmentContract.pendingWithdrawals(investor3, {from: virtualPowerPlantAdmin});
+    //     // let pendingWithdrawals4 = await batteryInvestmentContract.pendingWithdrawals(investor4, {from: virtualPowerPlantAdmin});
+    //     let pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals({from: virtualPowerPlantAdmin});
+    //     // if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor1: " + pendingWithdrawals1))};
+    //     // if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor2: " + pendingWithdrawals2))};
+    //     // if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor3: " + pendingWithdrawals3))};
+    //     // if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor4: " + pendingWithdrawals4))};
+    //
+    //     if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
+    //
+    //     let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+    //     if(showConsoleLog){new Promise(() => console.log("remainingInvestment after dividends: " + remainingInvestment))};
+    //
+    //     assert.equal(87, pendingTotalWithdrawals, "Dividend for investor1 incorrect");
+    //
+    //     // let totalDividend = (2 * remainingInvestment)/100;
+    //     // let expectedInvestor1Dividends = Math.ceil(((investmentAmount1 + investmentAmount3) * totalDividend) / (totalInvestment));
+    //     //
+    //     // if(showConsoleLog){new Promise(() => console.log("Expected dividends for investor1: " + expectedInvestor1Dividends))};
+    //     // assert.equal(pendingWithdrawals1, expectedInvestor1Dividends, "Dividend for investor1 incorrect");
+    // });
+    //
+    // it("...retrieve funds from withdrawal", async() => {
+    //
+    //     let totalInvestment = await batteryInvestmentContract.totalInvestment();
+    //
+    //     let remainingInvestment = await batteryInvestmentContract.remainingInvestment();
+    //     let totalDividend = (2 * remainingInvestment)/100;
+    //     let expectedInvestor2Dividends = Math.ceil(((investmentAmount2) * totalDividend) / (totalInvestment));
+    //
+    //     if(showConsoleLog){new Promise(() => console.log("pendingWithdrawals investor2: " + expectedInvestor2Dividends))};
+    //
+    //     let balance1 = await web3.eth.getBalance(investor2);
+    //     let withdrawTX = await batteryInvestmentContract.withdraw({from: investor2});
+    //     let balance2 = await web3.eth.getBalance(investor2);
+    //     // if(showConsoleLog){new Promise(() => console.log(balance1))}; // because you get a BigNumber);
+    //     // if(showConsoleLog){new Promise(() => console.log(balance2))}; // because you get a BigNumber);
+    //     // if(showConsoleLog){new Promise(() => console.log(withdrawTX))}; // because you get a BigNumber);
+    //
+    // });
+    //
+    // it("...retrieve funds from withdrawal", async() => {
+    //
+    //
+    //     // let balance1 = await web3.eth.getBalance(investor1);
+    //     // let withdrawTX = await batteryInvestmentContract.withdraw({from: investor1});
+    //     // let balance2 = await web3.eth.getBalance(investor1);
+    //     // if(showConsoleLog){new Promise(() => console.log(balance1))}; // because you get a BigNumber);
+    //     // if(showConsoleLog){new Promise(() => console.log(balance2))}; // because you get a BigNumber);
+    //     // if(showConsoleLog){new Promise(() => console.log(withdrawTX))}; // because you get a BigNumber);
+    //
+    //
+    //
+    //
+    //
+    //     // BALANCE BEFORE TX
+    //     var balanceBefore = await web3.eth.getBalance(investor1);
+    //     balanceBefore = web3.utils.fromWei(balanceBefore, 'wei');
+    //     // balanceBefore = balanceBefore.toString(10);
+    //     console.log(balanceBefore);
+    //     // console.log(b);
+    //
+    //     // let hash = await contract.buy.sendTransaction({from: investor1});
+    //     let hash = await batteryInvestmentContract.withdraw({from: investor1});
+    //     //
+    //     // // BALANCE AFTER TX
+    //     var balanceAfter = await (web3.eth.getBalance(investor1));
+    //     balanceAfter = web3.utils.fromWei(balanceAfter, 'wei');
+    //     // balanceAfter = balanceAfter.toString(10);
+    //     console.log(balanceAfter);
+    //     //
+    //     //
+    //     //
+    //     let tx = await web3.eth.getTransaction(hash.tx);
+    //     // // console.log(tx.gasPrice);
+    //     // // console.log(hash.receipt.gasUsed);
+    //     //
+    //     let gasPrice = tx.gasPrice;
+    //     let gasUsed = hash.receipt.gasUsed;
+    //     let gasCost = (gasPrice * gasUsed);
+    //
+    //     console.log(gasCost);
+    //     //
+    //     let total = (balanceAfter - balanceBefore);
+    //     console.log(total);
+    //
+    //     // const receipt = await hash.receipt;
+    //     // console.log(receipt);
+    //     // const gasCost = tx.gasPrice.mul(receipt.gasUsed);
+    //     // console.log("BEFORE", balanceBefore.toNumber());
+    //     // console.log("gas price", tx.gasPrice.toNumber());
+    //     // console.log("gas used", gasUsed);
+    //     // console.log("gas cost", gasCost.toNumber());
+    //     // console.log("AFTER", balanceAfter.toNumber());
+    //     // console.log("CHECKSUM", balanceAfter.add(gasCost).add(amount).toNumber());
+    //
+    // });
 
 });

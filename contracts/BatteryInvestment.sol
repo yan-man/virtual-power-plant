@@ -16,10 +16,13 @@ contract BatteryInvestment {
     // State variables
     address public virtualPowerPlantAddress; // internal
     // uint public temp = 5;
+    uint withdrawalCounter = 0;
     uint public totalInvestment; // called internally and allow External
     uint public remainingInvestment;  // ""
     uint public dividendPercentage = 2; // ""
-    uint public pendingTotalWithdrawals; // internal
+    uint[] public pendingTotalWithdrawals; // internal
+    // uint public totalCurrentDividend;
+    uint public numInvestorsWithdraw = 0;
     address[] public investorsList;
     mapping(address => uint) public pendingWithdrawals;  //
     mapping(address => Investment[]) public investors;  // to account for multiple investments per investor
@@ -35,6 +38,8 @@ contract BatteryInvestment {
     constructor (address _virtualPowerPlantAddress) public {
         virtualPowerPlantAddress = _virtualPowerPlantAddress;
         VirtualPowerPlantContract = VirtualPowerPlant(_virtualPowerPlantAddress);
+        pendingTotalWithdrawals.push(0);
+        pendingTotalWithdrawals.push(0);
     }
 
     function () external{
@@ -89,11 +94,24 @@ contract BatteryInvestment {
     }
 
     function withdraw () external payable {
+
+        require(investors[msg.sender].length > 0, "not a valid investor");
+        // addPendingWithdrawals(msg.sender);
+
         require(pendingWithdrawals[msg.sender] > 0, "Address has no withdrawal amount");
+        require(pendingTotalWithdrawals[1] > pendingWithdrawals[msg.sender]);
+
         uint withdrawalAmount = pendingWithdrawals[msg.sender];
+        pendingTotalWithdrawals[1] -= withdrawalAmount;
         // Remember to zero the pending refund before
         // sending to prevent re-entrancy attacks
         pendingWithdrawals[msg.sender] = 0;
+        numInvestorsWithdraw++;
+        if(numInvestorsWithdraw == investorsList.length){
+            numInvestorsWithdraw = 0;
+            pendingTotalWithdrawals[0] = 0;
+            remainingInvestment += pendingTotalWithdrawals[1];
+        }
         msg.sender.transfer(withdrawalAmount);
         emit LogWithdrawalMade(msg.sender, withdrawalAmount);
         // return true;
@@ -102,33 +120,54 @@ contract BatteryInvestment {
     function triggerDividend () external returns (bool) {
         require(VirtualPowerPlantContract.isAdmin() == true);
         require(remainingInvestment > 0, "No available dividends");
-        uint totalDividend = (remainingInvestment * dividendPercentage) / (100);
-        remainingInvestment -= totalDividend;
-        pendingTotalWithdrawals += totalDividend;
-        return addPendingWithdrawals();
+        require(pendingTotalWithdrawals[0] == 0, "Still on previous dividend cycle");
+        uint totalCurrentDividend = (remainingInvestment * dividendPercentage) / (100);
+        remainingInvestment -= totalCurrentDividend;
+        pendingTotalWithdrawals[0] = (totalCurrentDividend);
+        pendingTotalWithdrawals[1] = (totalCurrentDividend);
+        return true;
     }
 
     // event LogTest (uint index, uint investmentAmount);
 
-    function addPendingWithdrawals () internal returns (bool) {
+    function addPendingWithdrawals (address currentAddress) external returns (uint) {
 
-        for (uint outer = 0; outer < investorsList.length; outer++) {
-            address currentAddress = investorsList[outer];
-            uint totalCurrentInvestorAmt = 0;
-            for (uint i = 0; i < investors[currentAddress].length; i++) {
-                require(investors[currentAddress][i].investorAddress == currentAddress);
-                totalCurrentInvestorAmt += investors[currentAddress][i].investmentAmount;
-                // emit LogTest(outer, totalCurrentInvestorAmt);
-            }
-            uint totalUserDividend = (pendingTotalWithdrawals * totalCurrentInvestorAmt) / (totalInvestment);
-            pendingTotalWithdrawals -= totalUserDividend;
-            pendingWithdrawals[currentAddress] += totalUserDividend;
-            emit LogPendingWithdrawalAdded(currentAddress, pendingWithdrawals[currentAddress]);
+        require(VirtualPowerPlantContract.isAdmin() == true);
+
+        // for (uint outer = 0; outer < investorsList.length; outer++) {
+        // address currentAddress = investorsList[outer];
+        uint totalCurrentInvestorAmt = 0;
+        for (uint i = 0; i < investors[currentAddress].length; i++) {
+            require(investors[currentAddress][i].investorAddress == currentAddress);
+            totalCurrentInvestorAmt += investors[currentAddress][i].investmentAmount;
+            // emit LogTest(outer, totalCurrentInvestorAmt);
         }
-        uint tempPendingTotalWithdrawals = pendingTotalWithdrawals;
-        pendingTotalWithdrawals = 0;
-        remainingInvestment += tempPendingTotalWithdrawals;
-        return true;
+        uint totalUserDividend = (pendingTotalWithdrawals[0] * totalCurrentInvestorAmt) / (totalInvestment);
+        // pendingTotalWithdrawals[1] += totalUserDividend;
+        pendingWithdrawals[currentAddress] += totalUserDividend;
+        emit LogPendingWithdrawalAdded(currentAddress, pendingWithdrawals[currentAddress]);
+        // }
+        return totalUserDividend;
     }
+
+    // function getPendingWithdrawal (address currentAddress) external returns (uint) {
+    //
+    //     return pendingWithdrawals[currentAddress].investmentAmount
+    //
+    //     // for (uint outer = 0; outer < investorsList.length; outer++) {
+    //     // address currentAddress = investorsList[outer];
+    //     uint totalCurrentInvestorAmt = 0;
+    //     for (uint i = 0; i < investors[currentAddress].length; i++) {
+    //         require(investors[currentAddress][i].investorAddress == currentAddress);
+    //         totalCurrentInvestorAmt += investors[currentAddress][i].investmentAmount;
+    //         // emit LogTest(outer, totalCurrentInvestorAmt);
+    //     }
+    //     uint totalUserDividend = (pendingTotalWithdrawals * totalCurrentInvestorAmt) / (totalInvestment);
+    //     // pendingTotalWithdrawals -= totalUserDividend;
+    //     pendingWithdrawals[currentAddress] += totalUserDividend;
+    //     emit LogPendingWithdrawalAdded(currentAddress, pendingWithdrawals[currentAddress]);
+    //     // }
+    //     return totalUserDividend;
+    // }
 
 }

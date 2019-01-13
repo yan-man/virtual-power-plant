@@ -159,7 +159,7 @@ contract BatteryEnergy {
     }
 
     function getRealTimeEnergyPrice () private pure returns (uint realTimePrice) {
-        realTimePrice = 5;
+        realTimePrice = 5000;
     }
 
     function buyEnergy (uint _batteryID, uint _energyAmountToPurchase, uint _energyPrice) private returns (bool) {
@@ -193,6 +193,21 @@ contract BatteryEnergy {
         }
         return false;
     }
+
+    // function sellEnergy (uint _batteryID) private returns (bool) {
+    //     uint newRemainingInvestment = SafeMath.add(
+    //         (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment(),
+    //         SafeMath.mul(
+    //             _energyAmountToSell,
+    //             _energyPrice
+    //         )
+    //     );
+    //     if ((VirtualPowerPlantContract.batteryInvestmentContract()).updateRemainingInvestment(newRemainingInvestment)) {
+    //         VirtualPowerPlantContract.chargeBattery(_batteryID, _energyAmountToSell);
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
 
 }
