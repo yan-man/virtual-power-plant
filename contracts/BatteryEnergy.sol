@@ -26,6 +26,10 @@ contract BatteryEnergy {
     event LogEnergyPurchased(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
     event LogEnergySold(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
 
+    modifier isAdmin (address msgAddress) {
+        require(VirtualPowerPlantContract.isAdmin(msgAddress) == true);
+    }
+
 
     constructor (address _virtualPowerPlantAddress) public {
         virtualPowerPlantAddress = _virtualPowerPlantAddress;

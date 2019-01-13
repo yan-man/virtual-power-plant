@@ -41,9 +41,13 @@ contract BatteryInvestment {
         _;
     }
     modifier isValidDividendTriggerModifier {
-        require(VirtualPowerPlantContract.isAdmin() == true);
         require(remainingInvestment > 0, "No available dividends");
         require(pendingTotalWithdrawals[0] == 0, "Still on previous dividend cycle");
+        _;
+    }
+    modifier isAdmin (address msgAddress) {
+        require(VirtualPowerPlantContract.isAdmin(msgAddress) == true);
+        _;
     }
 
 
@@ -127,10 +131,15 @@ contract BatteryInvestment {
         // return true;
     }
 
-    function triggerDividend () external returns (bool) {
-        require(VirtualPowerPlantContract.isAdmin() == true);
-        require(remainingInvestment > 0, "No available dividends");
-        require(pendingTotalWithdrawals[0] == 0, "Still on previous dividend cycle");
+    function triggerDividend ()
+        external
+        isAdmin(msg.sender)
+        isValidDividendTriggerModifier
+        returns (bool)
+    {
+        // require(VirtualPowerPlantContract.isAdmin() == true);
+        // require(remainingInvestment > 0, "No available dividends");
+        // require(pendingTotalWithdrawals[0] == 0, "Still on previous dividend cycle");
         uint totalCurrentDividend = (remainingInvestment * dividendPercentage) / (100);
         remainingInvestment -= totalCurrentDividend;
         pendingTotalWithdrawals[0] = (totalCurrentDividend);
@@ -140,9 +149,9 @@ contract BatteryInvestment {
 
     // event LogTest (uint index, uint investmentAmount);
 
-    function addPendingWithdrawals (address currentAddress) external returns (uint) {
+    function addPendingWithdrawals (address currentAddress) external isAdmin(msg.sender) returns (uint) {
 
-        require(VirtualPowerPlantContract.isAdmin() == true);
+        // require(VirtualPowerPlantContract.isAdmin() == true);
 
         // for (uint outer = 0; outer < investorsList.length; outer++) {
         // address currentAddress = investorsList[outer];
@@ -160,24 +169,5 @@ contract BatteryInvestment {
         return totalUserDividend;
     }
 
-    // function getPendingWithdrawal (address currentAddress) external returns (uint) {
-    //
-    //     return pendingWithdrawals[currentAddress].investmentAmount
-    //
-    //     // for (uint outer = 0; outer < investorsList.length; outer++) {
-    //     // address currentAddress = investorsList[outer];
-    //     uint totalCurrentInvestorAmt = 0;
-    //     for (uint i = 0; i < investors[currentAddress].length; i++) {
-    //         require(investors[currentAddress][i].investorAddress == currentAddress);
-    //         totalCurrentInvestorAmt += investors[currentAddress][i].investmentAmount;
-    //         // emit LogTest(outer, totalCurrentInvestorAmt);
-    //     }
-    //     uint totalUserDividend = (pendingTotalWithdrawals * totalCurrentInvestorAmt) / (totalInvestment);
-    //     // pendingTotalWithdrawals -= totalUserDividend;
-    //     pendingWithdrawals[currentAddress] += totalUserDividend;
-    //     emit LogPendingWithdrawalAdded(currentAddress, pendingWithdrawals[currentAddress]);
-    //     // }
-    //     return totalUserDividend;
-    // }
 
 }
