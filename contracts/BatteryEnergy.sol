@@ -13,6 +13,8 @@ contract BatteryEnergy {
     // State variables
     address public virtualPowerPlantAddress; // address of parent contract deploying battery investment
     uint public purchaseInterval = 3600; // in sec,
+    uint public batteryIDCounter;
+    uint public batchProcess = 3;
      // Battery[] public tempBattery;
     // uint public temp;
     // uint private remainingInvestment;  //
@@ -20,6 +22,7 @@ contract BatteryEnergy {
     // Events
     // event Log(uint counter);
     event LogBatteryCheck(uint batteryID);
+    event LogBatteryCheckCompleted();
     event LogEnergyPurchased(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
     event LogEnergySold(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
 
@@ -30,19 +33,26 @@ contract BatteryEnergy {
     }
 
 
-    function checkBatteryEnergy () public returns (uint) {
+    function checkBatteryEnergy () external returns (bool) {
         // uint batteryIDMax = VirtualPowerPlantContract.getBatteryIDMax();
         // uint energyPrice = getRealTimeEnergyPrice();
         // totalEnergyPurchase = 88;
         uint batteryID;
         uint totalEnergyPurchase;
 
-        for (uint i = 0; i < VirtualPowerPlantContract.numBatteries(); i++) {
-            batteryID = VirtualPowerPlantContract.batteryMapping(i);
+        for (uint i = 0; i < batchProcess; i++) {
+            batteryID = VirtualPowerPlantContract.batteryMapping(batteryIDCounter);
             totalEnergyPurchase += executeBatteryTransaction(batteryID);
+            batteryIDCounter += 1;
+            if(batteryIDCounter == VirtualPowerPlantContract.numBatteries()){
+                batteryIDCounter = 0;
+                emit LogBatteryCheckCompleted();
+                // break;
+                return true;
+            }
         }
 
-        return totalEnergyPurchase;
+        return false;
         // remainingInvestment = (VirtualPowerPlantContract.BatteryInvestmentContract()).remainingInvestment();
     }
 

@@ -223,6 +223,15 @@ contract('VirtualPowerPlant', function(accounts) {
         if(showConsoleLog){new Promise(() => console.log("batteryCapacityRemaining battery5: " + batteryCapacityRemaining15))};
 
         checkBatteryEnergyTX = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
+
+        let batteryIDCounter = await batteryEnergyContract.batteryIDCounter();
+        console.log("battery counter" + batteryIDCounter.toString(10));
+
+        checkBatteryEnergyTX = await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
+
+        batteryIDCounter = await batteryEnergyContract.batteryIDCounter();
+        console.log("battery counter" + batteryIDCounter.toString(10));
+
         let remainingInvestment2 = await batteryInvestmentContract.remainingInvestment();
         new Promise(() => console.log("remainingInvestment after energy transactions for charging/discharging: " + remainingInvestment2));
 
@@ -286,7 +295,7 @@ contract('VirtualPowerPlant', function(accounts) {
         let balance2 = await web3.eth.getBalance(investor2);
 
         pendingWithdrawal2 = await batteryInvestmentContract.pendingWithdrawals(investor2);
-        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal2: " + pendingWithdrawal2))};
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal2 after: " + pendingWithdrawal2))};
 
 
         let tx = await web3.eth.getTransaction(withdrawTX1.tx);
@@ -297,14 +306,24 @@ contract('VirtualPowerPlant', function(accounts) {
         balance1 = balance1.toString(10);
         balance2 = balance2.toString(10);
 
+        let earnedDividend = balance2 - balance1 + gasCost;
+
         // balance1 - balance2 - gasCost
 
         // balance2 = (balance2) + gasCost;
 
         console.log(gasCost);
         // let total = balance2 - balance1 +
-        console.log(balance1 - balance2 - gasCost);
+        console.log(balance2 - balance1 + gasCost);
         // console.log(balance2);
+
+        assert.equal(pendingWithdrawal2, 0, "Pending withdrawal for investor2 goest o 0");
+
+
+
+        // pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals({from: virtualPowerPlantAdmin});
+        // if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
+
 
         // pendingTotalWithdrawals = await batteryInvestmentContract.pendingTotalWithdrawals(1, {from: virtualPowerPlantAdmin});
         // if(showConsoleLog){new Promise(() => console.log("pendingTotalWithdrawals: " + pendingTotalWithdrawals))};
