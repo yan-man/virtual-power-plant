@@ -2,53 +2,57 @@ pragma solidity >=0.5.0;
 
 import "./BatteryInvestment.sol";
 import "./BatteryEnergy.sol";
-import "./Ownable.sol";
+import "./Ownable.sol"; // to manage ownership addresses
 
 /// @author Yan Man
-/// @title A Virtual Power Plant implementation. Consensys Final Project Winter 2018
+/// @title A Virtual Power Plant implementation. Consensys Final Project Winter 2018/19
 contract VirtualPowerPlant is Ownable {
 
     // Type declarations
+    // contains all necessary battery characteristics
     struct Battery {
-        uint capacity;
-        uint currentFilled;
+        uint capacity; // max charge capacity
+        uint currentFilled; // current charge level
         uint dateAdded;
         uint cost;
-        bytes32 serialNumber;
-        uint priceThreshold;
-        uint chargeRate;
-        bool isActive;
-        uint mapIndex; // corresponds to the battery's index in batteryMapping
+        bytes32 serialNumber; // for internal record keeping
+        uint priceThreshold; // energy price threshold; determines whether to purchase energy based on real time rate
+        uint chargeRate; // per hour, ie how much capacity can be filled in an hour
+        bool isActive; // active or decommissioned
+        uint mapIndex; // corresponds to the battery's index in batteryMapping array
     }
-    Battery[] public batteries; //internal
-    Battery[] public decommissionedBatteries; //internal
-    BatteryInvestment public batteryInvestmentContract; // maybe external
-    BatteryEnergy public batteryEnergyContract;
+    Battery[] public batteries; // array of active batteries
+    Battery[] public decommissionedBatteries; // array of decommissioned batts
+    BatteryInvestment public batteryInvestmentContract; // deployed by this contract
+    BatteryEnergy public batteryEnergyContract; // deployed by this contract
     // State variables
-    // address public owner;
     address public virtualPowerPlantAddress;
-    address public batteryInvestmentAddress; //maybe external, only accessed by other contracts
-    address public batteryEnergyAddress;  //maybe can be external
+    address public batteryInvestmentAddress;
+    address public batteryEnergyAddress;
     uint public numBatteries = 0;
     uint public numAdmins = 0;
     uint public dividendPercentage;
-    uint[] public batteryMapping; // array of battery's index in Battery
-    mapping(address => bool) public admins;
+    uint[] public batteryMapping; // array to log the battery's index in batteries array
+    mapping(address => bool) public admins; // addresses of admins
 
     // Events
     event LogNewInvestment (address investorAddress, uint investmentAmount);
     event LogWithdrawalMade (address investorAddress, uint withdrawalAmount);
-    event LogChangeAdmin (address adminAddress, bool status);
-    event LogBatteryActive (bytes32 serialNumber, bool newStatus);
+    event LogChangeAdmin (address adminAddress, bool status); // when admin status is changed
+    event LogBatteryActive (bytes32 serialNumber, bool newStatus); // when battery status is changed
     event LogBatteryThresholdChanged (uint newThreshold);
 
     // Modifiers
-    // modifier onlyOwner { require(msg.sender == owner, "not the valid Owner"); _; }
-    modifier isAdminModifier { require(
-        admins[msg.sender] == true ||
-        msg.sender == batteryInvestmentAddress ||
-        msg.sender == batteryEnergyAddress
-        , "not a valid Admin"); _; }
+    // check user is a valid admin or calling from deployed contract
+    modifier isAdminModifier (address msgAddress) {
+        require(
+            admins[msgAddress] == true ||
+            msgAddress == batteryInvestmentAddress ||
+            msgAddress == batteryEnergyAddress,
+            "not a valid Admin"
+        );
+        _;
+    }
 
     modifier isBatteryValidModifier (uint _capacity, uint _currentFilled, uint _cost, uint _priceThreshold) {
         require(_capacity >= _currentFilled, "Capacity must exceed amount filled");
@@ -73,27 +77,10 @@ contract VirtualPowerPlant is Ownable {
     }
 
     // External functions
-    // ...
-
-    // External functions that are view
-    // ...
-
-    // External functions that are pure
-    // ...
-
-    // Public functions
-    // ...
-
-    // Internal functions
-    // ...
-
-    // Private functions
-    // ...
-
-    function isAdmin ()
-        public
+    function isAdmin (address adminAddress)
+        external
         view
-        isAdminModifier
+        isAdminModifier(adminAddress)
         returns (bool)
     {
         return true;
@@ -107,8 +94,8 @@ contract VirtualPowerPlant is Ownable {
         uint _priceThreshold,
         uint _chargeRate
     )
-        public
-        isAdminModifier
+        external
+        isAdminModifier(msg.sender)
         isBatteryValidModifier(_capacity, _currentFilled, _cost, _priceThreshold)
         returns (uint batteryID)
     {
@@ -134,9 +121,28 @@ contract VirtualPowerPlant is Ownable {
         emit LogBatteryActive(_serialNumber, true);
     }
 
+    // External functions that are view
+    // ...
+
+    // External functions that are pure
+    // ...
+
+    // Public functions
+    // ...
+
+    // Internal functions
+    // ...
+
+    // Private functions
+    // ...
+
+
+
+
+
     function chargeBattery (uint _batteryID, uint _chargeAmount)
         public
-        isAdminModifier
+        isAdminModifier(msg.sender)
         returns (uint)
     {
         require(batteries[_batteryID].currentFilled + _chargeAmount  <= batteries[_batteryID].capacity);
@@ -146,7 +152,7 @@ contract VirtualPowerPlant is Ownable {
 
     function changeBatteryThreshold (uint _batteryID, uint _newThreshold)
         public
-        isAdminModifier
+        isAdminModifier(msg.sender)
     {
         require(_newThreshold >= 0);
         batteries[_batteryID].priceThreshold = _newThreshold;
@@ -155,7 +161,7 @@ contract VirtualPowerPlant is Ownable {
 
     function decommissionBattery (uint _batteryID)
         public
-        isAdminModifier
+        isAdminModifier(msg.sender)
         returns (uint)
     {
         require(batteries[_batteryID].isActive);
@@ -176,15 +182,20 @@ contract VirtualPowerPlant is Ownable {
     //     return batteries.length;
     // }
 
-    function getRelevantBatteryInfo (uint _batteryID) public view isAdminModifier returns (
-        uint,
-        uint,
-        bytes32,
-        uint,
-        uint,
-        bool,
-        uint
-    ) {
+    function getRelevantBatteryInfo (uint _batteryID)
+        external
+        view
+        isAdminModifier(msg.sender)
+        returns (
+            uint,
+            uint,
+            bytes32,
+            uint,
+            uint,
+            bool,
+            uint
+        )
+    {
         return (
             batteries[_batteryID].capacity,
             batteries[_batteryID].currentFilled,

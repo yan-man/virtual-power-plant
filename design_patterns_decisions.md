@@ -8,6 +8,10 @@ other contracts aren't children because they dont need all the functions, thus t
 - just need to access certain variables
 - thus no inheritance
 
-choose to have base contract deploy the other 2 contracts so that the secondary contracts have access to the original contract address, to access the variables and necessary functions
+dont loop over the list of investors because it can grow without bound; only process dividends once individually. Calcualte total dividends at once, but only deposite into withdrawal accounts individually
+
+choose to have base contract deploy the other 2 contracts so that the secondary contracts have access to the original contract address, to access the variables and necessary functions. Instead of opting for call, access contract details directly; can only do that if you have ABI/ contract address details.
 - instead of using a migration script and making it a transaction, so it keeps the contract deployment modular, ie the contract can take care of everything with minimal other processes. don't need for parent contract to run a script in order to access child
 - so that all 3 contracts can easily pass addresses through contructor and doesn't need to be complicated by needing initalizing transactions between each of the 3 to share contract details  
+
+process batteries in batches to avoid having to loop over infinitely - sized arrays. Only process batteries in batches. define the max number of batches to process at once as a public variable. 

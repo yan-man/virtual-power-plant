@@ -34,6 +34,18 @@ contract BatteryInvestment {
 
     // Modifiers
     modifier enoughInvestmentModifier { require(msg.value > 0, "Attach an investment value"); _; }
+    modifier isValidWithdrawalModifier (address investorAddress) {
+        require(investors[investorAddress].length > 0, "Not a valid investor");
+        require(pendingWithdrawals[investorAddress] > 0, "Address has no withdrawal amount");
+        require(pendingTotalWithdrawals[1] > pendingWithdrawals[investorAddress], "Error - no available funds");
+        _;
+    }
+    modifier isValidDividendTriggerModifier {
+        require(VirtualPowerPlantContract.isAdmin() == true);
+        require(remainingInvestment > 0, "No available dividends");
+        require(pendingTotalWithdrawals[0] == 0, "Still on previous dividend cycle");
+    }
+
 
     constructor (address _virtualPowerPlantAddress) public {
         virtualPowerPlantAddress = _virtualPowerPlantAddress;
@@ -93,13 +105,11 @@ contract BatteryInvestment {
         emit LogNewInvestment(msg.sender, investAmount);
     }
 
-    function withdraw () external payable {
+    function withdraw () external payable isValidWithdrawalModifier(msg.sender) {
 
-        require(investors[msg.sender].length > 0, "not a valid investor");
-        // addPendingWithdrawals(msg.sender);
-
-        require(pendingWithdrawals[msg.sender] > 0, "Address has no withdrawal amount");
-        require(pendingTotalWithdrawals[1] > pendingWithdrawals[msg.sender]);
+        // require(investors[msg.sender].length > 0, "not a valid investor");
+        // require(pendingWithdrawals[msg.sender] > 0, "Address has no withdrawal amount");
+        // require(pendingTotalWithdrawals[1] > pendingWithdrawals[msg.sender]);
 
         uint withdrawalAmount = pendingWithdrawals[msg.sender];
         pendingTotalWithdrawals[1] -= withdrawalAmount;

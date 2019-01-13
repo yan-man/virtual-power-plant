@@ -132,8 +132,8 @@ contract BatteryEnergy {
         uint _energyPrice,
         bool _chargeBattery
     )
-    private
-    returns (uint calculateEnergyToTransact)
+        private
+        returns (uint calculateEnergyToTransact)
     {
         uint purchaseIntervalHours = SafeMath.div(purchaseInterval, 3600);  // convert seconds to hours
         uint emptyCapacity = _capacity - _currentFilled;
@@ -203,21 +203,6 @@ contract BatteryEnergy {
         }
         return false;
     }
-
-    // function sellEnergy (uint _batteryID) private returns (bool) {
-    //     uint newRemainingInvestment = SafeMath.add(
-    //         (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment(),
-    //         SafeMath.mul(
-    //             _energyAmountToSell,
-    //             _energyPrice
-    //         )
-    //     );
-    //     if ((VirtualPowerPlantContract.batteryInvestmentContract()).updateRemainingInvestment(newRemainingInvestment)) {
-    //         VirtualPowerPlantContract.chargeBattery(_batteryID, _energyAmountToSell);
-    //         return true;
-    //     }
-    //     return false;
-    // }
 
 
 }
