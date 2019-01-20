@@ -7,22 +7,21 @@ import "./VirtualPowerPlant.sol";
 contract BatteryInvestment {
 
     // Type declarations
+    // Contract which deployed this one
     VirtualPowerPlant internal VirtualPowerPlantContract;
+    // defines an investment
     struct Investment {
         address investorAddress; // address of investor
         uint timestamp; // timestamp of their investment
-        uint investmentAmount; // how much invested
+        uint investmentAmount; // in wei
     }
     // State variables
-    address public virtualPowerPlantAddress; // internal
-    // uint public temp = 5;
-    uint withdrawalCounter = 0;
-    uint public totalInvestment; // called internally and allow External
-    uint public remainingInvestment;  // ""
-    uint public dividendPercentage = 2; // ""
-    uint[] public pendingTotalWithdrawals; // internal
-    // uint public totalCurrentDividend;
-    uint public numInvestorsWithdraw = 0;
+    uint public totalInvestment; // total investment (without accounting for purchases)
+    uint public remainingInvestment;  // remaining investment (total investment - battery purchases)
+    uint public dividendPercentage; // percentage of remaining investment money allowed to be used for dividends
+    uint public investmentPercentage = 5; // percentage of total investment which must remain for a dividend to be triggered
+    uint[] public pendingTotalWithdrawals; // already-triggered dividends an investor can retrieve
+    uint public numInvestorsWithdraw = 0; //
     address[] public investorsList;
     mapping(address => uint) public pendingWithdrawals;  //
     mapping(address => Investment[]) public investors;  // to account for multiple investments per investor
@@ -35,13 +34,17 @@ contract BatteryInvestment {
     // Modifiers
     modifier enoughInvestmentModifier { require(msg.value > 0, "Attach an investment value"); _; }
     modifier isValidWithdrawalModifier (address investorAddress) {
+        // check that withdrawal is allowed. Must have an investment, existing
+        // withdrawals pending, and available funds for the withdrawal to proceed
         require(investors[investorAddress].length > 0, "Not a valid investor");
         require(pendingWithdrawals[investorAddress] > 0, "Address has no withdrawal amount");
         require(pendingTotalWithdrawals[1] > pendingWithdrawals[investorAddress], "Error - no available funds");
         _;
     }
+
     modifier isValidDividendTriggerModifier {
         require(remainingInvestment > 0, "No available dividends");
+        require(remainingInvestment > (investmentPercentage * totalInvestment) / 100, "Must maintain a certain investment level in order to trigger dividend");
         require(pendingTotalWithdrawals[0] == 0, "Still on previous dividend cycle");
         _;
     }
@@ -51,8 +54,8 @@ contract BatteryInvestment {
     }
 
 
-    constructor (address _virtualPowerPlantAddress) public {
-        virtualPowerPlantAddress = _virtualPowerPlantAddress;
+    constructor (address _virtualPowerPlantAddress, uint _dividendPercentage) public {
+        dividendPercentage = _dividendPercentage;
         VirtualPowerPlantContract = VirtualPowerPlant(_virtualPowerPlantAddress);
         pendingTotalWithdrawals.push(0);
         pendingTotalWithdrawals.push(0);
