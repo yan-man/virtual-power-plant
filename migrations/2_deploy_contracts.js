@@ -1,10 +1,12 @@
-var VirtualPowerPlant = artifacts.require("./VirtualPowerPlant.sol");
-// var BatteryInvestment = artifacts.require("./BatteryInvestment.sol");
+// var Adoption = artifacts.require("Adoption");
+//
+// module.exports = function(deployer) {
+//   deployer.deploy(Adoption);
+// };
+
+var VirtualPowerPlant = artifacts.require("VirtualPowerPlant");
+// var SafeMath = artifacts.require("SafeMath");
 
 module.exports = function(deployer) {
   deployer.deploy(VirtualPowerPlant);
 };
-
-// module.exports = function(deployer) {
-//   deployer.deploy(BatteryInvestment);
-// };

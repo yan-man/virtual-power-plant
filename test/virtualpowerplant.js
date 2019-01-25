@@ -7,7 +7,7 @@ const BatteryEnergy = artifacts.require("BatteryEnergy");
 contract('VirtualPowerPlant', function(accounts) {
 
     // when true, will show additional info within tests. Set to false otherwise
-    const showConsoleLog = true;
+    const showConsoleLog = false;
 
     const virtualPowerPlantOwner = accounts[0];  // by default, deployer of contract
     const virtualPowerPlantAdmin = accounts[1]; // set to admin
@@ -222,7 +222,7 @@ contract('VirtualPowerPlant', function(accounts) {
         await batteryEnergyContract.checkBatteryEnergy({from: virtualPowerPlantAdmin});
 
         let batteryIDCounter = await batteryEnergyContract.batteryIDCounter();
-        console.log("battery counter: " + batteryIDCounter);
+        if(showConsoleLog){console.log("battery counter: " + batteryIDCounter)};
 
         assert.equal(batteryIDCounter, 3, "Battery counter/index batch processing should be at Battery3");
 
@@ -302,32 +302,10 @@ contract('VirtualPowerPlant', function(accounts) {
         let withdrawTX1 = await batteryInvestmentContract.withdraw({from: investor2});
         let balance2 = await web3.eth.getBalance(investor2);
 
-        pendingWithdrawal2 = await batteryInvestmentContract.pendingWithdrawals(investor2);
-        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal2 after dividend is withdrawn: " + pendingWithdrawal2))};
+        pendingWithdrawal2After = await batteryInvestmentContract.pendingWithdrawals(investor2);
+        if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal2 after dividend is withdrawn: " + pendingWithdrawal2After))};
 
-
-        let tx = await web3.eth.getTransaction(withdrawTX1.tx);
-        let gasPrice = tx.gasPrice;
-        let gasUsed = withdrawTX1.receipt.gasUsed;
-        let gasCost = (gasPrice * gasUsed);
-
-        balance1 = balance1.toString(10);
-        balance2 = balance2.toString(10);
-
-        let earnedDividend = balance2 - balance1 + gasCost;
-
-        console.log(earnedDividend);
-
-        // balance1 - balance2 - gasCost
-
-        // balance2 = (balance2) + gasCost;
-
-        console.log(gasCost);
-        // let total = balance2 - balance1 +
-        console.log(balance2 - balance1 + gasCost);
-        // console.log(balance2);
-
-        assert.equal(pendingWithdrawal2, 0, "Pending withdrawal for investor2 goest o 0");
+        assert.equal(pendingWithdrawal2After, 0, "Pending withdrawal for investor2 should be 0 after it is withdrawn");
 
     });
 

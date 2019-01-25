@@ -199,6 +199,10 @@ contract VirtualPowerPlant is Ownable {
         );
     }
 
+    function getBatteryMapping() public view returns (uint[] memory) {
+      return batteryMapping;
+    }
+
     function getBatteryCapacityRemaining (uint _batteryID) external view returns (uint remaining) {
         remaining = batteries[_batteryID].capacity -  batteries[_batteryID].currentFilled;
         if(remaining <= 0){

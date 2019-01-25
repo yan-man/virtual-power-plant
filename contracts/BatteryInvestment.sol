@@ -19,7 +19,7 @@ contract BatteryInvestment {
     uint public totalInvestment; // total investment (without accounting for purchases)
     uint public remainingInvestment;  // remaining investment (total investment - battery purchases)
     uint public dividendPercentage; // percentage of remaining investment money allowed to be used for dividends
-    uint public investmentPercentage = 5; // percentage of total investment which must remain for a dividend to be triggered
+    uint public investmentPercentage = 3; // percentage of total investment which must remain for a dividend to be triggered
     uint[] public pendingTotalWithdrawals; // already-triggered dividends an investor can retrieve
     uint public numInvestorsWithdraw = 0; //
     address[] public investorsList;
