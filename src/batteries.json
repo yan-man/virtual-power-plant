@@ -2,7 +2,7 @@
   {
       "name": "battery1",
     "capacity": 100,
-    "currentFilled": 20,
+    "currentFilled": 50,
     "cost": 3,
     "serialNumber": "0x1",
     "priceThreshold": 7e3,
@@ -11,7 +11,7 @@
   {
       "name": "battery2",
     "capacity": 110,
-    "currentFilled": 25,
+    "currentFilled": 55,
     "cost": 5,
     "serialNumber": "0x2",
     "priceThreshold": 10e3,
@@ -20,7 +20,7 @@
   {
       "name": "battery3",
       "capacity": 90,
-      "currentFilled": 22,
+      "currentFilled": 42,
       "cost": 4,
       "serialNumber": "0x3",
       "priceThreshold": 5e3,
@@ -29,19 +29,19 @@
   {
       "name": "battery4",
       "capacity": 80,
-      "currentFilled": 30,
+      "currentFilled": 38,
       "cost": 7,
       "serialNumber": "0x4",
       "priceThreshold": 4e3,
-      "chargeRate": 20
+      "chargeRate": 2
   },
   {
       "name": "battery5",
       "capacity": 70,
-      "currentFilled": 26,
+      "currentFilled": 46,
       "cost": 1,
       "serialNumber": "0x5",
       "priceThreshold": 3e3,
-      "chargeRate": 11
+      "chargeRate": 3
   }
 ]

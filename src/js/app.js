@@ -227,6 +227,11 @@ App = {
                   console.log(err);
                   console.log(result);
               });
+              return VirtualPowerPlantInstance.numBatteries();
+          }).then(function(numBatteries){
+              // console.log(numBatteries.toString());
+              $('#numBatteries').text(numBatteries.toString());
+              return App.showBatteryFill();
           });
 
             // console.log(App.contracts.BatteryInvestment)
@@ -243,31 +248,114 @@ App = {
     // }).catch(function(err) {
     //   console.log(err.message);
     // });
-  },
-  showBatteryFill: function() {
+},
+showBatteryUpdate: async () => {
 
-    var BatteryInvestmentInstance;
-    App.contracts.VirtualPowerPlant.deployed().then(function(instance) {
-      VirtualPowerPlantInstance = instance;
+  var BatteryInvestmentInstance;
 
+  let VirtualPowerPlantInstance = await App.contracts.VirtualPowerPlant.deployed();
 
-      return VirtualPowerPlantInstance.getBatteryMapping();
+  let numBatteries = await VirtualPowerPlantInstance.numBatteries();
+  // console.log(numBatteries);
 
-      }).then(function(getBatteryMapping) {
-          console.log(getBatteryMapping);
+  for (var battCounter = 0; battCounter < numBatteries; battCounter++){
+      var info = await VirtualPowerPlantInstance.getRelevantBatteryInfo(battCounter);
+      // console.log(info[1].toString())
+      var serialNumber = info[2].toString().substring(0, 3);
+      var currentFilled = info[1].toString();
 
+      console.log(serialNumber);
 
+      $.getJSON('../batteries.json', function(data) {
 
-      }).catch(function(err) {
-        console.log(err.message);
+        batteriesArray = data;
+
+        for (i = 0; i < data.length; i ++) {
+
+            var batteryID = i;
+          if(data[i].serialNumber == serialNumber){
+
+              $('[data-id="'+batteryID+'"]').parent(".panel-body").find(".battery-currentFilledTitle").css("color", "red");
+
+              if (parseInt(currentFilled) > parseInt($('[data-id="'+batteryID+'"]').parent(".panel-body").find(".battery-currentFilled").text())) {
+
+                  console.log(data[i].serialNumber + " light green");
+
+                  $('[data-id="'+batteryID+'"]').parent(".panel-body").css("background", "lightgreen");
+              } else if (parseInt(currentFilled) <= parseInt($('[data-id="'+batteryID+'"]').parent(".panel-body").find(".battery-currentFilled").text())) {
+                  console.log(data[i].serialNumber + " light pink");
+
+                  $('[data-id="'+batteryID+'"]').parent(".panel-body").css("background", "lightpink");
+              }
+              $('[data-id="'+batteryID+'"]').parent(".panel-body").find(".battery-currentFilled").text(currentFilled);
+          }
+        }
       });
+  }
+},
+showBatteryFill: async () => {
 
-    // }).then(function(adminsNumPre) {
-    //     console.log(adminsNumPre);
-    // }).catch(function(err) {
-    //   console.log(err.message);
-    // });
-  },
+  var BatteryInvestmentInstance;
+
+  let VirtualPowerPlantInstance = await App.contracts.VirtualPowerPlant.deployed();
+
+  let numBatteries = await VirtualPowerPlantInstance.numBatteries();
+  // console.log(numBatteries);
+
+  for (var battCounter = 0; battCounter < numBatteries; battCounter++){
+      var info = await VirtualPowerPlantInstance.getRelevantBatteryInfo(battCounter);
+      // console.log(info[1].toString())
+      var serialNumber = info[2].toString().substring(0, 3);
+      var currentFilled = info[1].toString();
+
+      console.log(serialNumber);
+
+      $.getJSON('../batteries.json', function(data) {
+
+        batteriesArray = data;
+
+        for (i = 0; i < data.length; i ++) {
+
+            var batteryID = i;
+          if(data[i].serialNumber == serialNumber){
+              $('[data-id="'+batteryID+'"]').parent(".panel-body").find(".battery-currentFilled").text(currentFilled);
+          }
+        }
+      });
+  }
+},
+  // showBatteryFill: function() {
+  //
+  //   var BatteryInvestmentInstance;
+  //   App.contracts.VirtualPowerPlant.deployed().then(function(instance) {
+  //     VirtualPowerPlantInstance = instance;
+  //
+  //
+  //     return VirtualPowerPlantInstance.numBatteries();
+  //
+  //     }).then(function(numBatteries) {
+  //         // console.log(numBatteries);
+  //
+  //         for (var i = 0; i < numBatteries; i++){
+  //             console.log(VirtualPowerPlantInstance.getRelevantBatteryInfo(0))
+  //         }
+  //
+  //         return
+  //
+  //     }).then(function(battInfo){
+  //
+  //         console.log(battInfo[1].toString(10));
+  //
+  //     }).catch(function(err) {
+  //       console.log(err.message);
+  //     });
+  //
+  //   // }).then(function(adminsNumPre) {
+  //   //     console.log(adminsNumPre);
+  //   // }).catch(function(err) {
+  //   //   console.log(err.message);
+  //   // });
+  // },
   checkTest: function(adopters, account) {
     var VirtualPowerPlantInstance;
 
@@ -639,7 +727,7 @@ checkBatteryEnergy: function(event) {
               // return BatteryInvestmentInstance.totalInvestment();
               App.showInvestmentAmount();
           }).then(function(){
-              App.showBatteryFill();
+              App.showBatteryUpdate();
           });
 
             // console.log(App.contracts.BatteryInvestment)

@@ -210,7 +210,7 @@ contract VirtualPowerPlant is Ownable {
         }
     }
 
-    function getBatteryMapping () external view returns (uint[]) {
+    function getBatteryMapping () external view returns (uint[] memory) {
         return batteryMapping;
     }
 
