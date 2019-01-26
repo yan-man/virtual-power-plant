@@ -210,6 +210,10 @@ contract VirtualPowerPlant is Ownable {
         }
     }
 
+    function getBatteryMapping () external view returns (uint[]) {
+        return batteryMapping;
+    }
+
     function getBatteryChargeRate (uint _batteryID) external view returns (uint) {
         return batteries[_batteryID].chargeRate;
     }
@@ -219,7 +223,7 @@ contract VirtualPowerPlant is Ownable {
     }
 
     // Public functions
-    function toggleContractActive() isAdmin public {
+    function toggleContractActive() isAdminModifier(msg.sender) public {
         stopped = !stopped;
     }
 

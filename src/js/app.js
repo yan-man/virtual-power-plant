@@ -203,8 +203,6 @@ App = {
             // Get the necessary contract artifact file and instantiate it with truffle-contract
             var BatteryInvestmentArtifact = data;
 
-            // console.log(VirtualPowerPlantArtifact.abi)
-
             // Truffle contract is redundant to web3, but allows you to absorb truffle build files
             // with deployed addresses and ABIs that you  would have to set otherwise in Web3 - NJ
             App.contracts.BatteryInvestment = TruffleContract(BatteryInvestmentArtifact);
@@ -233,6 +231,30 @@ App = {
 
             // console.log(App.contracts.BatteryInvestment)
         });
+
+
+
+      }).catch(function(err) {
+        console.log(err.message);
+      });
+
+    // }).then(function(adminsNumPre) {
+    //     console.log(adminsNumPre);
+    // }).catch(function(err) {
+    //   console.log(err.message);
+    // });
+  },
+  showBatteryFill: function() {
+
+    var BatteryInvestmentInstance;
+    App.contracts.VirtualPowerPlant.deployed().then(function(instance) {
+      VirtualPowerPlantInstance = instance;
+
+
+      return VirtualPowerPlantInstance.getBatteryMapping();
+
+      }).then(function(getBatteryMapping) {
+          console.log(getBatteryMapping);
 
 
 
@@ -616,6 +638,8 @@ checkBatteryEnergy: function(event) {
               // console.log(totalInvestment)
               // return BatteryInvestmentInstance.totalInvestment();
               App.showInvestmentAmount();
+          }).then(function(){
+              App.showBatteryFill();
           });
 
             // console.log(App.contracts.BatteryInvestment)
@@ -675,7 +699,7 @@ addBattery: function(event) {
     }).then(function() {
         App.showInvestmentAmount();
     }).then(function(){
-        $('[data-id="'+batteryID+'"]').text('Decommission Battery').attr('disabled', true);
+        $('[data-id="'+batteryID+'"]').text('Success!').attr('disabled', true);
         // $('[data-id="'+batteryID+'"]').parent(".panel-body")
         $('[data-id="'+batteryID+'"]').parent(".panel-body").css("background", "lightblue");
         // $(document).on('click', '.btn-add-battery', App.decommissionBattery);
