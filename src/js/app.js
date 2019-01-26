@@ -722,7 +722,7 @@ checkBatteryEnergy: function(event) {
 
               return BatteryEnergyInstance.checkBatteryEnergy();
               // return coin.sendCoin(account_two, 3, {from: account_one});
-          }).then(function(){
+          }).then(function(checkBatteryCompleted){
               // console.log(totalInvestment)
               // return BatteryInvestmentInstance.totalInvestment();
               App.showInvestmentAmount();

@@ -1,10 +1,11 @@
 pragma solidity >=0.5.0;
 
 import "./VirtualPowerPlant.sol";
-// import "./BatteryLibrary.sol";
 import "./SafeMath.sol";
 import "./Math.sol";
 
+/// @author Yan Man
+/// @title Manage charging/discharging of batteries 
 contract BatteryEnergy {
 
     // Type declarations
@@ -12,37 +13,31 @@ contract BatteryEnergy {
 
     // State variables
     address public virtualPowerPlantAddress; // address of parent contract deploying battery investment
-    uint public purchaseInterval = 3600; // in sec,
-    uint public batteryIDCounter;
-    uint public batchProcess = 3;
-     // Battery[] public tempBattery;
-    // uint public temp;
-    // uint private remainingInvestment;  //
+    uint public purchaseInterval = 3600; // in sec, prescribed time between energy tx
+    uint public batteryIDCounter; // for batch processes; the latest battery ID processed
+    uint public batchProcess = 5; // number of batteries in the batch to process at once
 
     // Events
     // event Log(uint counter);
     event LogBatteryCheck(uint batteryID);
     event LogBatteryCheckCompleted();
-    event LogEnergyPurchased(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
-    event LogEnergySold(bytes32 serialNumber, uint energyTransacted, uint energyPrice, uint remainingInvestment);
+    event LogEnergyPurchased(bytes32 serialNumber, uint energyTransacted, uint energyPrice);
+    event LogEnergySold(bytes32 serialNumber, uint energyTransacted, uint energyPrice);
 
-    // Modifiers
-
-
-
+    // constructor
+    /// @param address of parent contract deploying this contract
     constructor (address _virtualPowerPlantAddress) public {
         virtualPowerPlantAddress = _virtualPowerPlantAddress;
+        // create VirtualPowerPlant contract from parent contract address
         VirtualPowerPlantContract = VirtualPowerPlant(_virtualPowerPlantAddress);
     }
 
-
+    /// @notice check each battery's energy level and charge/discharge based on
+    /// @notice current energy rate and battery's price threshold
+    /// @return whether all batteries were successfully checked
     function checkBatteryEnergy () external returns (bool) {
-        // uint batteryIDMax = VirtualPowerPlantContract.getBatteryIDMax();
-        // uint energyPrice = getRealTimeEnergyPrice();
-        // totalEnergyPurchase = 88;
         uint batteryID;
         uint totalEnergyPurchase;
-
         for (uint i = 0; i < batchProcess; i++) {
             batteryID = VirtualPowerPlantContract.batteryMapping(batteryIDCounter);
             totalEnergyPurchase += executeBatteryTransaction(batteryID);
@@ -50,22 +45,22 @@ contract BatteryEnergy {
             if(batteryIDCounter == VirtualPowerPlantContract.numBatteries()){
                 batteryIDCounter = 0;
                 emit LogBatteryCheckCompleted();
-                // break;
                 return true;
             }
         }
-
         return false;
-        // remainingInvestment = (VirtualPowerPlantContract.BatteryInvestmentContract()).remainingInvestment();
     }
 
+    /// @notice for each battery execute the battery transaction by making decision
+    /// @notice on charging/discharging
+    /// @return amount of energy to transact
     function executeBatteryTransaction (uint _batteryID) public returns (uint) {
 
         uint energyAmountToTransact;
+        // first retrieve current price of energy
         uint energyPrice = getRealTimeEnergyPrice();
-
         emit LogBatteryCheck(_batteryID);
-        require((VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment() > 0);
+        // retrieve relevant battery info for specific battery based on ID
         (
             uint capacity,
             uint currentFilled,
@@ -75,11 +70,16 @@ contract BatteryEnergy {
             bool isActive,
             uint mapIndex
         ) = VirtualPowerPlantContract.getRelevantBatteryInfo(_batteryID);
-        // uint emptyCapacity = VirtualPowerPlantContract.getBatteryCapacityRemaining(_batteryID);
-
-        // require(emptyCapacity > 0, "Battery should have empty capacity for charge");
+        // battery must be active to proceed
         require(isActive == true, "Battery should be active");
+        // retrive decision on whether to buy or sell energy
         bool chargeBattery = energyDecisionAlgorithm(priceThreshold, energyPrice);
+        // check whether to charge or discharge battery
+        if (chargeBattery == true) {
+            // require remaining investment to be valid to purchase energy
+            require((VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment() > 0);
+        }
+        // buy or sell energy, update battery status
         energyAmountToTransact = transactEnergy(
             _batteryID,
             capacity,
@@ -89,42 +89,12 @@ contract BatteryEnergy {
             energyPrice,
             chargeBattery
         );
-
-        // if (chargeBattery == true) {
-        //
-        //     buyEnergy(_batteryID, energyAmountToTransact, energyPrice);
-        //
-        //     // emit LogEnergyPurchased(
-        //     //     serialNumber,
-        //     //     energyAmountToPurchase,
-        //     //     energyPrice,
-        //     //     (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
-        //     // );
-        //     // return energyAmountToPurchase;
-        // } else {
-        //     // energyToSell = calculateEnergyToTransact(chargeRate, energyPrice, emptyCapacity);
-        //     sellEnergy(_batteryID, energyAmountToTransact, energyPrice);
-        //     // emit LogEnergySold(
-        //     //     serialNumber,
-        //     //     energyAmountToPurchase,
-        //     //     energyPrice,
-        //     //     (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
-        //     // );
-        // }
-        // return 0;
-
-
+        return energyAmountToTransact;
     }
 
-
-    function energyDecisionAlgorithm (uint _priceThreshold, uint _energyPrice) private pure returns (bool) {
-        if (_priceThreshold > _energyPrice) {
-            return true;
-        } else{
-            return false;
-        }
-    }
-
+    /// @notice buy or sell energy and update battery status
+    /// @param battery characteristics
+    /// @return amount of energy to transact
     function transactEnergy
     (
         uint _batteryID,
@@ -138,44 +108,57 @@ contract BatteryEnergy {
         private
         returns (uint calculateEnergyToTransact)
     {
-        uint purchaseIntervalHours = SafeMath.div(purchaseInterval, 3600);  // convert seconds to hours
+        // convert seconds to hours
+        uint purchaseIntervalHours = SafeMath.div(purchaseInterval, 3600);
+        // how much energy is available in battery
         uint emptyCapacity = _capacity - _currentFilled;
 
+        // if decision is to charge battery
         if (_chargeBattery == true) {
+            // to add energy to battery, it must have available capacity
             require(emptyCapacity > 0, "Battery should have remaining capacity in order to charge");
-
+            // charge rate * time interval gives total energy amount to be added
+            // but energy amount cannot exceed empty capacity
             calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), emptyCapacity);
+            // find remaining investment in fund
             uint remainingInvestment = (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment();
+            // cost = energy amount * energy price
             uint costOfEnergyPurchase = SafeMath.mul(calculateEnergyToTransact, _energyPrice);
+            // make sure there is enough investment to cover energy purchase
             if (costOfEnergyPurchase > remainingInvestment) {
+                // energy purchase costs at most are the remaining investment
                 costOfEnergyPurchase = remainingInvestment;
+                // back calculate the energy based on the max eth available
                 calculateEnergyToTransact = SafeMath.div(remainingInvestment, _energyPrice);
             }
-
+            // purchase energy
             buyEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
             emit LogEnergyPurchased(
                 _serialNumber,
                 calculateEnergyToTransact,
-                _energyPrice,
-                (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
+                _energyPrice
             );
         } else {
+            // maximum energy to sell is the current amount in the battery
             calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), _currentFilled);
             sellEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
             emit LogEnergySold(
                 _serialNumber,
                 calculateEnergyToTransact,
-                _energyPrice,
-                (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment()
+                _energyPrice
             );
         }
     }
 
-    function getRealTimeEnergyPrice () private pure returns (uint realTimePrice) {
-        realTimePrice = 5000;
-    }
-
-    function buyEnergy (uint _batteryID, uint _energyAmountToPurchase, uint _energyPrice) private returns (bool) {
+    /// @notice buy energy
+    /// @param battery identifier, amount to purchase and energy price
+    /// @return whether energy successfully sold
+    function buyEnergy (
+        uint _batteryID,
+        uint _energyAmountToPurchase,
+        uint _energyPrice
+    ) private returns (bool) {
+        // calculate remaining investment money after energy purchase
         uint newRemainingInvestment = SafeMath.sub(
             (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment(),
             SafeMath.mul(
@@ -183,16 +166,24 @@ contract BatteryEnergy {
                 _energyPrice
             )
         );
+        // require sufficient investment remaining after purchase to continue
         require(newRemainingInvestment >= 0, "Not enough money to make this purchase");
         if ((VirtualPowerPlantContract.batteryInvestmentContract()).updateRemainingInvestment(newRemainingInvestment)) {
-            // remainingInvestment = newRemainingInvestment;
+            // update battery characteristics based on energy charged
             VirtualPowerPlantContract.chargeBattery(_batteryID, -_energyAmountToPurchase);
             return true;
         }
         return false;
     }
 
-    function sellEnergy (uint _batteryID, uint _energyAmountToSell, uint _energyPrice) private returns (bool) {
+    /// @notice sell energy
+    /// @param battery identifier, amount to sell, energy price
+    /// @return whether energy successfully sold
+    function sellEnergy (
+        uint _batteryID,
+        uint _energyAmountToSell,
+        uint _energyPrice
+    ) private returns (bool) {
         uint newRemainingInvestment = SafeMath.add(
             (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment(),
             SafeMath.mul(
@@ -207,5 +198,26 @@ contract BatteryEnergy {
         return false;
     }
 
+    /// @notice basic function to retrieve real time energy price. For now,
+    /// @notice hardcode a static value
+    function getRealTimeEnergyPrice () private pure returns (uint realTimePrice) {
+        realTimePrice = 5000;
+    }
+
+    /// @notice make a decision on whether to buy or sell energy
+    /// @return true to buy energy
+    /// @return false to sell energy
+    function energyDecisionAlgorithm (uint _priceThreshold, uint _energyPrice)
+        private
+        pure
+        returns (bool)
+    {
+        // for now, simple algo. If current price is less than threshold, buy
+        if (_priceThreshold > _energyPrice) {
+            return true;
+        } else{
+            return false;
+        }
+    }
 
 }

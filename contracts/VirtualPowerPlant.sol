@@ -9,15 +9,15 @@ import "./Ownable.sol"; // to manage ownership addresses
 contract VirtualPowerPlant is Ownable {
 
     // Type declarations
-    // contains all necessary battery characteristics
+    // Battery contains all necessary battery characteristics
     struct Battery {
         uint capacity; // max charge capacity
         uint currentFilled; // current charge level
-        uint dateAdded;
-        uint cost;
+        uint dateAdded; // keep track of timestamp battery was added
+        uint cost;  // cost of the battery in eth
         bytes32 serialNumber; // for internal record keeping
-        uint priceThreshold; // energy price threshold; determines whether to purchase energy based on real time rate
-        uint chargeRate; // per hour, ie how much capacity can be filled in an hour
+        uint priceThreshold; // energy price threshold; whether to purchase energy based on real time rate
+        uint chargeRate; // per hour, ie how much capacity can be charged/discharged
         bool isActive; // active or decommissioned
         uint mapIndex; // corresponds to the battery's index in batteryMapping array
     }
@@ -26,7 +26,7 @@ contract VirtualPowerPlant is Ownable {
     BatteryInvestment public batteryInvestmentContract; // deployed by this contract
     BatteryEnergy public batteryEnergyContract; // deployed by this contract
     // State variables
-    bool private stopped = false;
+    bool private stopped = false; // circuit breaker design
     address public virtualPowerPlantAddress;
     address public batteryInvestmentAddress;
     address public batteryEnergyAddress;
@@ -53,12 +53,13 @@ contract VirtualPowerPlant is Ownable {
         );
         _;
     }
+    // circuit breaker design
     modifier stopInEmergency { if (!stopped) _; }
     modifier onlyInEmergency { if (stopped) _; }
     // check battery is valid:
-    // 1) amount of charge in the battery cannot exceed the charge
-    // 2) remaining investment has enough funds to pay for the cost of the battery
-    // 3) price threshold is positive
+    // - amount of charge in the battery cannot exceed the charge
+    // - remaining investment has enough funds to pay for the cost of the battery
+    // - price threshold is positive
     modifier isBatteryValidModifier (uint _capacity, uint _currentFilled, uint _cost, uint _priceThreshold) {
         require(_capacity >= _currentFilled, "Capacity must exceed amount filled");
         require(batteryInvestmentContract.remainingInvestment() >= _cost, "Not enough investment to purchase");
@@ -66,7 +67,7 @@ contract VirtualPowerPlant is Ownable {
         _;
     }
 
-    /// constructor
+    /// @notice constructor
     constructor () public {
         setAdmin(msg.sender, true); // set contract deployer as admin
         uint dividendPercentage = 1; // set amount of investment which will be used for dividend
@@ -78,13 +79,14 @@ contract VirtualPowerPlant is Ownable {
         batteryEnergyAddress = address(batteryEnergyContract);
     }
 
-    /// fallback function
+    /// @notice fallback function
     function () external {
         revert("Fallback");
     }
 
     // External functions
-    /// allow other contracts to check admin users
+    /// @notice allow other contracts to check admin users
+    /// @return whether address is an admin user
     function isAdmin (address adminAddress)
         external
         view
@@ -94,7 +96,9 @@ contract VirtualPowerPlant is Ownable {
         return true;
     }
 
-    /// add battery to array of storage assets
+    /// @notice add battery to array of storage assets
+    /// @param each battery characteristic
+    /// @return battery ID of battery added
     function addBattery (
         uint _capacity,
         uint _currentFilled,
@@ -103,13 +107,14 @@ contract VirtualPowerPlant is Ownable {
         uint _priceThreshold,
         uint _chargeRate
     )
-        external // external admin access
+        external
         isAdminModifier(msg.sender)
         isBatteryValidModifier(_capacity, _currentFilled, _cost, _priceThreshold)
         stopInEmergency()
         returns (uint batteryID)
     {
         batteryID = batteries.length; // index in the array, corresponds to current length of array
+        // add each characteristic to create Battery struct, push to array
         batteries.push(Battery({
             capacity: _capacity,
             currentFilled: _currentFilled,
@@ -121,7 +126,7 @@ contract VirtualPowerPlant is Ownable {
             isActive: true,
             mapIndex: batteryID
         }));
-        numBatteries++; // number of active batteries is increased
+        numBatteries++; // increase number of active batteries
         batteryMapping.push(batteryID); // record battery ID in mapping
         // update remaining investment with cost of battery
         uint _newRemainingInvestment = batteryInvestmentContract.remainingInvestment() - _cost;
@@ -129,10 +134,13 @@ contract VirtualPowerPlant is Ownable {
         emit LogBatteryActive(_serialNumber, true);
     }
 
-    /// charge battery, ie add to its currently filled charge
+    /// @notice add/subtract charge to battery
+    /// @param battery identifier, amount of charge to add/subtract
+    /// @return new amount of charge currently filled
     function chargeBattery (uint _batteryID, uint _chargeAmount)
         external
         isAdminModifier(msg.sender)
+        stopInEmergency()
         returns (uint)
     {
         // require the anount of charge to not exceed capacity
@@ -142,7 +150,8 @@ contract VirtualPowerPlant is Ownable {
         return batteries[_batteryID].currentFilled;
     }
 
-    /// admin access to altering battery characteristics
+    /// @notice alter battery threshold that determines charge/discharge decision
+    /// @param battery identifier, new threshold value to change to
     function changeBatteryThreshold (uint _batteryID, uint _newThreshold)
         external
         isAdminModifier(msg.sender)
@@ -154,7 +163,9 @@ contract VirtualPowerPlant is Ownable {
         emit LogBatteryThresholdChanged(_newThreshold);
     }
 
-    /// decommission battery, ie set active to false and move to other array
+    /// @notice decommission battery, ie set active to false and move to other array
+    /// @param battery identifier
+    /// @return number of batteries after batt has been decommissioned
     function decommissionBattery (uint _batteryID)
         external
         isAdminModifier(msg.sender)
@@ -162,9 +173,9 @@ contract VirtualPowerPlant is Ownable {
     {
         // require the battery state to be active before it can be decommissioned
         require(batteries[_batteryID].isActive);
-        batteries[_batteryID].isActive = false; // set active field to false
+        batteries[_batteryID].isActive = false; // set battery to inactive
         bytes32 serialNumber = batteries[_batteryID].serialNumber;
-        // add decommissioned battery to other mapping
+        // add decommissioned battery to separate array
         decommissionedBatteries.push(batteries[_batteryID]);
         // replace decommissioned battery in the array with battery at the end of current array
         batteries[batteries.length - 1].mapIndex = batteries[_batteryID].mapIndex;
@@ -172,13 +183,16 @@ contract VirtualPowerPlant is Ownable {
         batteryMapping[_batteryID] = batteries.length - 1;
         // remove last elements (which have been moved)
         batteryMapping.length--;
+        // decrement number of batteries
         numBatteries--;
         emit LogBatteryActive(serialNumber, false); // log battery change activity
         return numBatteries;
     }
 
     // External functions that are view
-    /// retrieve battery info from mapping
+    /// @notice retrieve battery info
+    /// @param battery identifier
+    /// @return battery characteristics as list of values
     function getRelevantBatteryInfo (uint _batteryID)
         external
         view
@@ -203,6 +217,9 @@ contract VirtualPowerPlant is Ownable {
         );
     }
 
+    /// @notice retrieve battery capacity remaining
+    /// @param battery identifier
+    /// @return battery capacity remaining
     function getBatteryCapacityRemaining (uint _batteryID) external view returns (uint remaining) {
         remaining = batteries[_batteryID].capacity -  batteries[_batteryID].currentFilled;
         if(remaining <= 0){
@@ -210,28 +227,35 @@ contract VirtualPowerPlant is Ownable {
         }
     }
 
-    function getBatteryMapping () external view returns (uint[] memory) {
-        return batteryMapping;
-    }
-
+    /// @notice retrieve battery charge rate
+    /// @param battery identifier
+    /// @return battery charge rate
     function getBatteryChargeRate (uint _batteryID) external view returns (uint) {
         return batteries[_batteryID].chargeRate;
     }
 
+    /// @notice mapIndex of the battery
+    /// @param battery identifier
+    /// @return index of battery within batteryMapping
     function getBatteryMapIndex (uint _batteryID) external view returns (uint) {
         return batteries[_batteryID].mapIndex;
     }
 
     // Public functions
+
+    /// @notice toggle stopped variable for circuit breaker design
     function toggleContractActive() isAdminModifier(msg.sender) public {
         stopped = !stopped;
     }
 
+    /// @notice add or remove admins
     function setAdmin (address _newAdminAddress, bool _adminStatus)
         public
         onlyOwner
     {
+        // set admin at address
         admins[_newAdminAddress] = _adminStatus;
+        // if true, increment # of admins
         if (_adminStatus == true) {
             numAdmins++;
         } else {
