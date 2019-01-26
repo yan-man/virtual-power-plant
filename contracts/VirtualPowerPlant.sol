@@ -26,6 +26,7 @@ contract VirtualPowerPlant is Ownable {
     BatteryInvestment public batteryInvestmentContract; // deployed by this contract
     BatteryEnergy public batteryEnergyContract; // deployed by this contract
     // State variables
+    bool private stopped = false;
     address public virtualPowerPlantAddress;
     address public batteryInvestmentAddress;
     address public batteryEnergyAddress;
@@ -52,6 +53,8 @@ contract VirtualPowerPlant is Ownable {
         );
         _;
     }
+    modifier stopInEmergency { if (!stopped) _; }
+    modifier onlyInEmergency { if (stopped) _; }
     // check battery is valid:
     // 1) amount of charge in the battery cannot exceed the charge
     // 2) remaining investment has enough funds to pay for the cost of the battery
@@ -103,6 +106,7 @@ contract VirtualPowerPlant is Ownable {
         external // external admin access
         isAdminModifier(msg.sender)
         isBatteryValidModifier(_capacity, _currentFilled, _cost, _priceThreshold)
+        stopInEmergency()
         returns (uint batteryID)
     {
         batteryID = batteries.length; // index in the array, corresponds to current length of array
@@ -199,10 +203,6 @@ contract VirtualPowerPlant is Ownable {
         );
     }
 
-    function getBatteryMapping() public view returns (uint[] memory) {
-      return batteryMapping;
-    }
-
     function getBatteryCapacityRemaining (uint _batteryID) external view returns (uint remaining) {
         remaining = batteries[_batteryID].capacity -  batteries[_batteryID].currentFilled;
         if(remaining <= 0){
@@ -219,6 +219,10 @@ contract VirtualPowerPlant is Ownable {
     }
 
     // Public functions
+    function toggleContractActive() isAdmin public {
+        stopped = !stopped;
+    }
+
     function setAdmin (address _newAdminAddress, bool _adminStatus)
         public
         onlyOwner
