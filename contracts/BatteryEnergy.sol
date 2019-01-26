@@ -5,7 +5,7 @@ import "./SafeMath.sol";
 import "./Math.sol";
 
 /// @author Yan Man
-/// @title Manage charging/discharging of batteries 
+/// @title Manage charging/discharging of batteries
 contract BatteryEnergy {
 
     // Type declarations
@@ -15,7 +15,7 @@ contract BatteryEnergy {
     address public virtualPowerPlantAddress; // address of parent contract deploying battery investment
     uint public purchaseInterval = 3600; // in sec, prescribed time between energy tx
     uint public batteryIDCounter; // for batch processes; the latest battery ID processed
-    uint public batchProcess = 5; // number of batteries in the batch to process at once
+    uint public batchProcess = 3; // number of batteries in the batch to process at once
 
     // Events
     // event Log(uint counter);
