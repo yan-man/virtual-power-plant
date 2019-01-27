@@ -1,28 +1,19 @@
-## Virtual Power Plant DApp
-### Consensys Course Final Project
-### Author: Yan Man
+## Virtual Power Plant (VPP) DApp
+### VPP Dapp is a sample implementation of an energy trading Ethereum smart contract based on distributed battery resources
+#### Consensys Course Final Project
+#### Author: Yan Man
 
-##### Introduction
+##### Introduction/Overview
 
 Although customers typically pay a flat energy rate for electricity throughout the day, energy prices in actuality fluctuate drastically depending on real time aggregate energy demand. Due to the unpredictability of real time demand, along with insufficient implementation and availability of large scale energy storage resources, energy response must be managed on a minute by minute basis. Electricity generators respond by turning on so called "Peaker" plants, which are convenient for short term energy generation but are also typically the most [environmentally damaging.](https://www.gogriddy.com/blog/renewable-energy/to-use-clean-energy-avoid-pollution-spewing-peaker-plants/)
 
-
-
-Also, there is a flip side. Typically generators have a set of power plants running, which requires time and energy to ramp up or down in production. The ideal scenario is that demand is perfectly tracked by supply, and there is nothing extraneous. When demand is high, costs are high. However, in times of extremely low demand, such as in the middle of the night, the opposite problem happens; generators don't want to turn off their power plants. so they run them and when demadn is low, energy prices go negative, meaning that you can earn money by using electricity.
-
-Thus, it is beneficial to be able to smooth the demand curve to optimize grid efficiency. Through a set of abttery assets that can store energy when real time electricity prices are low, and then discharge energy back to the grid when energy is expensive, this not only improves grid efficiency but also allows you to make money from trading energy.
-
-##### Components
-
-
-
-##### Functions and Interaction Logic
+With flexible energy storage resources such as batteries, energy can be stored when real time energy demand is low, and discharged to the grid when demand, and prices, are high. This serves to effectively smooth the aggregated demand curve throughout the day, improving grid efficiency and stability as well as creating profit through energy trading.
 
 ##### How to Use
 
 ###### Required installations to run and test the contract
 
-Make sure that these following packages are installed:
+Install the following packages:
 
 1. [Truffle v5.0](https://truffleframework.com/docs/truffle/getting-started/installation)
 2. [Ganache](https://truffleframework.com/docs/ganache/quickstart)
@@ -31,17 +22,15 @@ Make sure that these following packages are installed:
 5. [MetaMask](https://metamask.io/)
 Solidity
 
-Developed in Ubuntu64 16.04 VM environment.
+This DApp was developed in Ubuntu64 16.04 VM environment.
 
-**To run package:**
+**To run:**
 
-The  is a truffle project that contains the required contract, migration and test files to run a DApp.
+VPP-Dapp is a truffle project that contains all necessary contract, library, migration and test files.
 
-Use git to clone this repo to your local machine.
+Execute via command line:
 
-Then execute the rest via command line.
-
-**Truffle Compile, Migrate, Test:**
+```Truffle Migrate --reset```
 
 To run truffle compile, migrate, and test, first go into the local folder where the repo has been cloned. Start ganache-cli from the command line in that directory with the command:
 
