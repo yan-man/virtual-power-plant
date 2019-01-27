@@ -1341,12 +1341,12 @@
     "1548524531998": {
       "events": {},
       "links": {},
-      "address": "0x6b4950f4A0A730142669e95E1855F0EabCFE217e",
-      "transactionHash": "0x6af761c3cc3376d32cb9fa6fea2aff2bfdfb9dcb58dda2a81998af8db244f0d1"
+      "address": "0x6473cEf63FA5516CCF8c458fC832f8987D6fdBab",
+      "transactionHash": "0x83498d46aee12378e813cf429fcfa98812eb79a3a7cfc83adc85e3ee14a07fac"
     }
   },
   "schemaVersion": "3.0.0",
-  "updatedAt": "2019-01-26T17:44:45.907Z",
+  "updatedAt": "2019-01-27T04:20:39.442Z",
   "devdoc": {
     "methods": {}
   },

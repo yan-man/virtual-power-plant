@@ -155,6 +155,7 @@ contract VirtualPowerPlant is Ownable {
     /// @param _newThreshold new threshold value to change to
     function changeBatteryThreshold (uint _batteryID, uint _newThreshold)
         external
+        stopInEmergency()
         isAdminModifier(msg.sender)
     {
         // require the price threshold to be positive
@@ -169,6 +170,7 @@ contract VirtualPowerPlant is Ownable {
     /// @return number of batteries after batt has been decommissioned
     function decommissionBattery (uint _batteryID)
         external
+        stopInEmergency()
         isAdminModifier(msg.sender)
         returns (uint)
     {

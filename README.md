@@ -105,13 +105,7 @@ To test the DApp, follow instructions on the `index.html` homepage.
 - `getInvestorInvestment`: getter function to retrieve investment amount for particular investor
 
 ##### BatteryEnergy.sol
-- `checkBatteryEnergy`: loop over batches of batteries, check transaction circumstances for each
-- `transactEnergy`: for an individual battery, determine energy transaction (charge or discharge)
-- `buyEnergy`
-- `sellEnergy`
-- `executeBatteryTransaction`: 
-- `getRealTimeEnergyPrice`
-- `energyDecisionAlgorithm`
+- `checkBatteryEnergy`: loop over batches of batteries, check transaction circumstances for each. Transact energy as required, update the investment fund with profits/energy purchases.
 
 #### Tests:
 
@@ -127,4 +121,5 @@ Contract tests were written in JavaScript
 #### Libraries
 
 1. [SafeMath](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol): Use battle tested math functions to avoid overflow errors, etc
-2. [Ownable](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ownership/Ownable.sol): Inherit ownership properties
+2. [Math](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/Math.sol): Other basic math functions
+3. [Ownable](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ownership/Ownable.sol): Inherit ownership properties
