@@ -30,7 +30,9 @@ VPP-Dapp is a truffle project that contains all necessary contract, library, mig
 
 Execute via command line:
 
-```Truffle Migrate --reset```
+1. Clone the repo to your directory
+
+2. ```Truffle Migrate --reset```
 
 To run truffle compile, migrate, and test, first go into the local folder where the repo has been cloned. Start ganache-cli from the command line in that directory with the command:
 
