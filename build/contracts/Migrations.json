@@ -1331,10 +1331,22 @@
       "links": {},
       "address": "0x1Eccfd77b1931bC932D79Fa035C2DEdB0dAC48f9",
       "transactionHash": "0x5d34a7fbbcfca0b97ead7f5db645fa4458746d3c25b08a17c6d4c42853ce0f91"
+    },
+    "1548524385543": {
+      "events": {},
+      "links": {},
+      "address": "0x3AA3Ce7beD35d4f06a38b67416a3a26c5a9456b7",
+      "transactionHash": "0x1f0e6c02024e9aa51e1ac2c0cfcd98fc42a093d50e8c92298f660dc154954a39"
+    },
+    "1548524531998": {
+      "events": {},
+      "links": {},
+      "address": "0x6b4950f4A0A730142669e95E1855F0EabCFE217e",
+      "transactionHash": "0x6af761c3cc3376d32cb9fa6fea2aff2bfdfb9dcb58dda2a81998af8db244f0d1"
     }
   },
   "schemaVersion": "3.0.0",
-  "updatedAt": "2019-01-26T13:31:28.387Z",
+  "updatedAt": "2019-01-26T17:44:45.907Z",
   "devdoc": {
     "methods": {}
   },

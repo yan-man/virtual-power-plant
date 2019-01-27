@@ -97,7 +97,6 @@ contract VirtualPowerPlant is Ownable {
     }
 
     /// @notice add battery to array of storage assets
-    /// @param each battery characteristic
     /// @return battery ID of battery added
     function addBattery (
         uint _capacity,
@@ -135,7 +134,8 @@ contract VirtualPowerPlant is Ownable {
     }
 
     /// @notice add/subtract charge to battery
-    /// @param battery identifier, amount of charge to add/subtract
+    /// @param _batteryID battery identifier
+    /// @param _chargeAmount amount of charge to add/subtract
     /// @return new amount of charge currently filled
     function chargeBattery (uint _batteryID, uint _chargeAmount)
         external
@@ -151,7 +151,8 @@ contract VirtualPowerPlant is Ownable {
     }
 
     /// @notice alter battery threshold that determines charge/discharge decision
-    /// @param battery identifier, new threshold value to change to
+    /// @param _batteryID battery identifier
+    /// @param _newThreshold new threshold value to change to
     function changeBatteryThreshold (uint _batteryID, uint _newThreshold)
         external
         isAdminModifier(msg.sender)
@@ -164,7 +165,7 @@ contract VirtualPowerPlant is Ownable {
     }
 
     /// @notice decommission battery, ie set active to false and move to other array
-    /// @param battery identifier
+    /// @param _batteryID battery identifier
     /// @return number of batteries after batt has been decommissioned
     function decommissionBattery (uint _batteryID)
         external
@@ -191,7 +192,7 @@ contract VirtualPowerPlant is Ownable {
 
     // External functions that are view
     /// @notice retrieve battery info
-    /// @param battery identifier
+    /// @param _batteryID battery identifier
     /// @return battery characteristics as list of values
     function getRelevantBatteryInfo (uint _batteryID)
         external
@@ -218,7 +219,7 @@ contract VirtualPowerPlant is Ownable {
     }
 
     /// @notice retrieve battery capacity remaining
-    /// @param battery identifier
+    /// @param _batteryID battery identifier
     /// @return battery capacity remaining
     function getBatteryCapacityRemaining (uint _batteryID) external view returns (uint remaining) {
         remaining = batteries[_batteryID].capacity -  batteries[_batteryID].currentFilled;
@@ -228,14 +229,14 @@ contract VirtualPowerPlant is Ownable {
     }
 
     /// @notice retrieve battery charge rate
-    /// @param battery identifier
+    /// @param _batteryID battery identifier
     /// @return battery charge rate
     function getBatteryChargeRate (uint _batteryID) external view returns (uint) {
         return batteries[_batteryID].chargeRate;
     }
 
     /// @notice mapIndex of the battery
-    /// @param battery identifier
+    /// @param _batteryID battery identifier
     /// @return index of battery within batteryMapping
     function getBatteryMapIndex (uint _batteryID) external view returns (uint) {
         return batteries[_batteryID].mapIndex;

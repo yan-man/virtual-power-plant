@@ -25,7 +25,7 @@ contract BatteryEnergy {
     event LogEnergySold(bytes32 serialNumber, uint energyTransacted, uint energyPrice);
 
     // constructor
-    /// @param address of parent contract deploying this contract
+    /// @param _virtualPowerPlantAddress address of parent contract deploying this contract
     constructor (address _virtualPowerPlantAddress) public {
         virtualPowerPlantAddress = _virtualPowerPlantAddress;
         // create VirtualPowerPlant contract from parent contract address
@@ -93,7 +93,6 @@ contract BatteryEnergy {
     }
 
     /// @notice buy or sell energy and update battery status
-    /// @param battery characteristics
     /// @return amount of energy to transact
     function transactEnergy
     (
@@ -151,7 +150,9 @@ contract BatteryEnergy {
     }
 
     /// @notice buy energy
-    /// @param battery identifier, amount to purchase and energy price
+    /// @param _batteryID battery identifier
+    /// @param _energyAmountToPurchase amount to purchase
+    /// @param _energyPrice current energy price
     /// @return whether energy successfully sold
     function buyEnergy (
         uint _batteryID,
@@ -177,7 +178,9 @@ contract BatteryEnergy {
     }
 
     /// @notice sell energy
-    /// @param battery identifier, amount to sell, energy price
+    /// @param _batteryID battery identifier
+    /// @param _energyAmountToSell amount to sell
+    /// @param _energyPrice current energy price
     /// @return whether energy successfully sold
     function sellEnergy (
         uint _batteryID,

@@ -325,17 +325,12 @@ contract('VirtualPowerPlant', function(accounts) {
         let balance2 = await web3.eth.getBalance(investor2);
 
         // make sure the pendingWithdrawal has been updated after investor2
-        // withdrew amount 
+        // withdrew amount
         pendingWithdrawal2After = await batteryInvestmentContract.pendingWithdrawals(investor2);
         if(showConsoleLog){new Promise(() => console.log("pendingWithdrawal2 after dividend is withdrawn: " + pendingWithdrawal2After))};
 
         assert.equal(pendingWithdrawal2After, 0, "Pending withdrawal for investor2 should be 0 after it is withdrawn");
 
     });
-
-
-
-
-
 
 });

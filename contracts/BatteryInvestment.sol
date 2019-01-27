@@ -65,7 +65,8 @@ contract BatteryInvestment {
     }
 
     // contructor
-    /// @param address of parent contract, set dividend percentage threshold
+    /// @param _virtualPowerPlantAddress address of parent contract
+    /// @param _dividendPercentage set dividend percentage threshold
     constructor (address _virtualPowerPlantAddress, uint _dividendPercentage) public {
         dividendPercentage = _dividendPercentage;
         // create VirtualPowerPlant contract from parent contract address
@@ -82,7 +83,7 @@ contract BatteryInvestment {
 
     // External functions
     /// @notice alter remaining investment
-    /// @param new remaining investment value
+    /// @param _remainingInvestment remaining investment value
     /// @return whether var succesfully updated
     function updateRemainingInvestment (uint _remainingInvestment) external returns (bool) {
         remainingInvestment = _remainingInvestment;
@@ -157,7 +158,7 @@ contract BatteryInvestment {
 
     /// @notice add withdrawals, transfer from outstanding dividend to each
     /// @notice individual investor
-    /// @param investor address for dividend
+    /// @param currentAddress investor address for dividend
     function addPendingWithdrawals (address currentAddress)
         external
         isAdmin(msg.sender)
@@ -183,8 +184,8 @@ contract BatteryInvestment {
     // External functions that are view
     /// @notice retrieve investment amount for a particular investment, because
     /// @notice multiple are available per user, submit index too
-    /// @param investor address, index of their investment (for multiple investments)
-    /// @param otherwise should be 0
+    /// @param investorAddress investor address
+    /// @param index of their investment (for multiple investments) else should be 0
     function getInvestorInvestment (address investorAddress, uint index)
         external
         view

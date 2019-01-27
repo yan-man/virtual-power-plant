@@ -1,16 +1,116 @@
-# virtual-power-plant
-Consensys Course Final Project - Virtual Power Plant DApp
+## Virtual Power Plant DApp
+### Consensys Course Final Project
+### Author: Yan Man
 
-Introduction:
-In the energy industry, currently homeowners and consumers pay a flat fee for electricity, whereas electricity retailers and utilities, who supply said electricity, must purchase their energy on the futures market or on the real time market to supplement unforeseen demand. thus, they are exposed to the risks of the ever fluctuating price of electricity while shielding hte consumer from these price risks. In actuality, energy prices fluctuate drastically depending on real time demand. Energy generators must also respond on high freqeuency time scales to ensure that supply meets the current demand.
+##### Introduction
 
-Because of a lack of viable large scale battery capacity, the grid suffers from this situation. While consumers are shielded adn for the most part never even realize their electricity supply is being managed on a real time scale, generators and suppliers must generate and purchase electricity in real time to account for customer demand. In times of high customer demand with little warning, electricity can be as expensive as 100x the average rate. To account for this extremely high demand on short notice, generators must scramble to turn on "peaker" plants, which are amongst the dirtiest and costliest generation assets, to cover for the extra demand. This is both costly and environmentally damaging. And Although these instances are short lived and only occur a few times yearly, they can cost millions of dollars in damanges and inefficiency.
+Although customers typically pay a flat energy rate for electricity throughout the day, energy prices in actuality fluctuate drastically depending on real time aggregate energy demand. Due to the unpredictability of real time demand, along with insufficient implementation and availability of large scale energy storage resources, energy response must be managed on a minute by minute basis. Electricity generators respond by turning on so called "Peaker" plants, which are convenient for short term energy generation but are also typically the most [environmentally damaging.](https://www.gogriddy.com/blog/renewable-energy/to-use-clean-energy-avoid-pollution-spewing-peaker-plants/)
 
-On a daily basis, the fluctuations in demand that correspond to the daily schedules of most consumers accounts for the other fluctuations in cost.
+
 
 Also, there is a flip side. Typically generators have a set of power plants running, which requires time and energy to ramp up or down in production. The ideal scenario is that demand is perfectly tracked by supply, and there is nothing extraneous. When demand is high, costs are high. However, in times of extremely low demand, such as in the middle of the night, the opposite problem happens; generators don't want to turn off their power plants. so they run them and when demadn is low, energy prices go negative, meaning that you can earn money by using electricity.
 
 Thus, it is beneficial to be able to smooth the demand curve to optimize grid efficiency. Through a set of abttery assets that can store energy when real time electricity prices are low, and then discharge energy back to the grid when energy is expensive, this not only improves grid efficiency but also allows you to make money from trading energy.
+
+##### Components
+
+
+
+##### Functions and Interaction Logic
+
+##### How to Use
+
+###### Required installations to run and test the contract
+
+Make sure that these following packages are installed:
+
+1. [Truffle v5.0](https://truffleframework.com/docs/truffle/getting-started/installation)
+2. [Ganache](https://truffleframework.com/docs/ganache/quickstart)
+3. [NPM](https://www.npmjs.com/get-npm)
+4. [Lite-Server](https://www.npmjs.com/package/lite-server)
+5. [MetaMask](https://metamask.io/)
+Solidity
+
+Developed in Ubuntu64 16.04 VM environment.
+
+**To run package:**
+
+The  is a truffle project that contains the required contract, migration and test files to run a DApp.
+
+Use git to clone this repo to your local machine.
+
+Then execute the rest via command line.
+
+**Truffle Compile, Migrate, Test:**
+
+To run truffle compile, migrate, and test, first go into the local folder where the repo has been cloned. Start ganache-cli from the command line in that directory with the command:
+
+*ganache-cli -p 7545*
+
+This creates a development blockchain with 10 prefunded accounts so that testing can occur. Default port is 8545 but we are going to launch in the 7545 port which is what the flag in the command is for. This port is where the chain is running and also where truffle looks when running migration and tests.
+
+In the same directory, run the command:
+
+*truffle compile*
+
+This compiles the contract code and creates an ABI that helps the contract get deployed onto the blockchain.
+
+Then, in the same directory, run the command:
+
+*truffle migrate*
+
+This migrates our contract, it's dependencies, and other artifacts on the blockchain of our choice. Since we are only testing here, this migrates onto the ganache cli test chain.
+
+*truffle test*
+
+Tests are written in javascript to test the functionality of the contract. This function shows the results from running tests on the ganache test chain.
+
+**Tests**
+
+The following tests are included in this package:
+
+1. Admin Sign Up- Owner of the contract should be able to sign up admins, and verify who is an admin.
+2. Institution Sign Up - Admins should be able to add institutions.
+3. User Sign Up - Owner should be able to set the sign up fee. User should be able to sign up.
+4. Add Entry - Institution should be able to add entry to user's queue. User should be able to view queue.
+5. Confirm Entry - Users should be able to confirm entries in their queue into their resume.
+6. View Resume - Outside parties should be able to view user's resume.
+
+**Libraries**
+
+ [Consensys repo](https://github.com/ConsenSys/ethereum-developer-tools-list).
+
+1. SafeMath -
+2. Ownable -
+
+**Frontend:**
+
+
+
+
+*ganache-cli -p 7545*
+
+This starts the ganache test chain so that it is active for port 7545. The frontend is served through port 7545 so our ganache needs to be aligned.
+
+Open a new tab in the terminal and then in the same directory, run
+
+*npm run dev*
+
+That will start the frontend in a browser window with a local address. To interact with the contract through the browser, the metamask plug in must be set up. In order to import users from the ganache test environment, grab one of the private keys for an account generated by ganache. This can be found at the terminal window where ganache was launched.
+
+The first account, account[0] is the account used to launch the contract and that is the contract owner. You will need to grab 3 other account private keys so that you can load those into metamask and test the different functionalities of the front end.
+
+Go into Metamask and set the connection to "Custom RPC" and the target RPC url to http://127.0.0.1:7545. This connects the Ganache chain with metamask so accounts from ganache can be used through metamask. To import an account from ganache onto MetaMask, choose Create Account from the drop down in MetaMask and enter in the private key. Now you are free to interact with the DApp using MetaMask via the ganache test network!
+
+This frontend has the 3 main contract functionalities incorporated.
+
+1. First, you can sign up as a user on this Dapp. Use one of the accounts other than the contract owner. Click on the USER button and in the drop down, type in your name in the "Username" field. Click the Sign Up button and you will be added to the contract as a user. MetaMask should prompt you to approve a transaction. That is basically paying a nominal fee for the transaction to happen to run the function necessary to sign up the user.
+
+2. As a contract owner, you can also sign up other accounts as Admins on the contract. Go to metamask and change the identity to the owner's account. Then copy the address for another account and enter in that value in the "Admin Address" field. Click sign up. Now that account has been given Admin rights.
+
+3. Admins (including the owner) have the power to add institutions. Institutions are either universities, schools, or certificators who can add entries to the resume of the users. Add the "Institution Name," "Institution Address," and "Type" to sign up a verified institution.
+
+
 
 
 This project is a DApp example for a Virtual Power Plant. It consists of the following contracts:
@@ -54,7 +154,7 @@ as an existing investor, I want to receive dividends in order to earn on my inve
 
 virtualPowerPlant contract owner:
 as an owner, I want to add admins users in order to manage the battery array
-as an owner, i want to remove my 
+as an owner, i want to remove my
 
 - anyone with an address can invest any amount of ether into the battery investment fund.
 Benefits: At certain intervals, the creation of dividends can be triggered by admins or overall virtual power plant owner. Everyone
