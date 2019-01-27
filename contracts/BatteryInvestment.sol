@@ -76,11 +76,6 @@ contract BatteryInvestment {
         pendingTotalWithdrawals.push(0);
     }
 
-    // fallback function
-    function () external{
-        revert("Fallback function");
-    }
-
     // External functions
     /// @notice alter remaining investment
     /// @param _remainingInvestment remaining investment value

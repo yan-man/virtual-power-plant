@@ -79,11 +79,6 @@ contract VirtualPowerPlant is Ownable {
         batteryEnergyAddress = address(batteryEnergyContract);
     }
 
-    /// @notice fallback function
-    function () external {
-        revert("Fallback");
-    }
-
     // External functions
     /// @notice allow other contracts to check admin users
     /// @return whether address is an admin user
