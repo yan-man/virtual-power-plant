@@ -51,47 +51,6 @@ contract BatteryEnergy {
         return false;
     }
 
-    /// @notice for each battery execute the battery transaction by making decision
-    /// @notice on charging/discharging
-    /// @return amount of energy to transact
-    function executeBatteryTransaction (uint _batteryID) public returns (uint) {
-
-        uint energyAmountToTransact;
-        // first retrieve current price of energy
-        uint energyPrice = getRealTimeEnergyPrice();
-        emit LogBatteryCheck(_batteryID);
-        // retrieve relevant battery info for specific battery based on ID
-        (
-            uint capacity,
-            uint currentFilled,
-            bytes32 serialNumber,
-            uint priceThreshold,
-            uint chargeRate,
-            bool isActive,
-            uint mapIndex
-        ) = VirtualPowerPlantContract.getRelevantBatteryInfo(_batteryID);
-        // battery must be active to proceed
-        require(isActive == true, "Battery should be active");
-        // retrive decision on whether to buy or sell energy
-        bool chargeBattery = energyDecisionAlgorithm(priceThreshold, energyPrice);
-        // check whether to charge or discharge battery
-        if (chargeBattery == true) {
-            // require remaining investment to be valid to purchase energy
-            require((VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment() > 0);
-        }
-        // buy or sell energy, update battery status
-        energyAmountToTransact = transactEnergy(
-            _batteryID,
-            capacity,
-            currentFilled,
-            serialNumber,
-            chargeRate,
-            energyPrice,
-            chargeBattery
-        );
-        return energyAmountToTransact;
-    }
-
     /// @notice buy or sell energy and update battery status
     /// @return amount of energy to transact
     function transactEnergy
@@ -201,6 +160,47 @@ contract BatteryEnergy {
         return false;
     }
 
+    /// @notice for each battery execute the battery transaction by making decision
+    /// @notice on charging/discharging
+    /// @return amount of energy to transact
+    function executeBatteryTransaction (uint _batteryID) private returns (uint) {
+
+        uint energyAmountToTransact;
+        // first retrieve current price of energy
+        uint energyPrice = getRealTimeEnergyPrice();
+        emit LogBatteryCheck(_batteryID);
+        // retrieve relevant battery info for specific battery based on ID
+        (
+            uint capacity,
+            uint currentFilled,
+            bytes32 serialNumber,
+            uint priceThreshold,
+            uint chargeRate,
+            bool isActive,
+            uint mapIndex
+        ) = VirtualPowerPlantContract.getRelevantBatteryInfo(_batteryID);
+        // battery must be active to proceed
+        require(isActive == true, "Battery should be active");
+        // retrive decision on whether to buy or sell energy
+        bool chargeBattery = energyDecisionAlgorithm(priceThreshold, energyPrice);
+        // check whether to charge or discharge battery
+        if (chargeBattery == true) {
+            // require remaining investment to be valid to purchase energy
+            require((VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment() > 0);
+        }
+        // buy or sell energy, update battery status
+        energyAmountToTransact = transactEnergy(
+            _batteryID,
+            capacity,
+            currentFilled,
+            serialNumber,
+            chargeRate,
+            energyPrice,
+            chargeBattery
+        );
+        return energyAmountToTransact;
+    }
+
     /// @notice basic function to retrieve real time energy price. For now,
     /// @notice hardcode a static value
     function getRealTimeEnergyPrice () private pure returns (uint realTimePrice) {
@@ -212,7 +212,6 @@ contract BatteryEnergy {
     /// @return false to sell energy
     function energyDecisionAlgorithm (uint _priceThreshold, uint _energyPrice)
         private
-        pure
         returns (bool)
     {
         // for now, simple algo. If current price is less than threshold, buy

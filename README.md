@@ -1,17 +1,33 @@
 ## Virtual Power Plant (VPP) DApp
-### VPP Dapp is a sample implementation of an energy trading Ethereum smart contract based on distributed battery resources
-#### Consensys Course Final Project
-#### Author: Yan Man
+### VPP DApp is a sample implementation of a Virtual Power Plant based on a fleet of distributed battery resources which are managed by an investment fund.
+##### Consensys Course Final Project
+##### Author: Yan Man
 
-##### Introduction/Overview
+### Overview:
 
 Although customers typically pay a flat energy rate for electricity throughout the day, energy prices in actuality fluctuate drastically depending on real time aggregate energy demand. Due to the unpredictability of real time demand, along with insufficient implementation and availability of large scale energy storage resources, energy response must be managed on a minute by minute basis. Electricity generators respond by turning on so called "Peaker" plants, which are convenient for short term energy generation but are also typically the most [environmentally damaging.](https://www.gogriddy.com/blog/renewable-energy/to-use-clean-energy-avoid-pollution-spewing-peaker-plants/)
 
 With flexible energy storage resources such as batteries, energy can be stored when real time energy demand is low, and discharged to the grid when demand, and prices, are high. This serves to effectively smooth the aggregated demand curve throughout the day, improving grid efficiency and stability as well as creating profit through energy trading.
 
-##### How to Use
+### Example Usage:
+In JavaScript, create a VirtualPowerPlant contract from its artifact. You can then begin to interact with its contract functions directly. Remember to invest into the account before adding batteries to the array.
 
-###### Required installations to run and test the contract
+```
+VirtualPowerPlant = TruffleContract(VirtualPowerPlantArtifact);
+VirtualPowerPlant.addBattery(
+    battery.capacity,
+    battery.currentFilled,
+    web3.toWei(battery.cost, "ether"),
+    battery.serialNumber,
+    battery.priceThreshold,
+    battery.chargeRate
+);
+```
+
+Otherwise, interact with the DApp via the frontend included, which will allow you to invest funds, add batteries, and execute energy transactions.
+
+### Getting Started
+#### Required installations:
 
 Install the following packages:
 
@@ -24,128 +40,91 @@ Solidity
 
 This DApp was developed in Ubuntu64 16.04 VM environment.
 
-**To run:**
+#### To run:
 
-VPP-Dapp is a truffle project that contains all necessary contract, library, migration and test files.
-
-Execute via command line:
+VPP-Dapp is a truffle project that contains all necessary contract, library, migration and test files. Execute via command line:
 
 1. Clone the repo to your directory
 
-2. ```Truffle Migrate --reset```
+2. In a separate terminal, start ganache development blockchain on port 7545. Create 10 funded accounts
 
-To run truffle compile, migrate, and test, first go into the local folder where the repo has been cloned. Start ganache-cli from the command line in that directory with the command:
+    ```
+    > ganache-cli -p 7545
+    ```
 
-*ganache-cli -p 7545*
+3. In the original terminal, navigate to the project directory. Migrate and compile the Truffle contract to generate the ABI and deploy to the dev blockchain
 
-This creates a development blockchain with 10 prefunded accounts so that testing can occur. Default port is 8545 but we are going to launch in the 7545 port which is what the flag in the command is for. This port is where the chain is running and also where truffle looks when running migration and tests.
+4. Test the contract functions via js tests. All tests should pass
 
-In the same directory, run the command:
+5. Make sure `MetaMask` is installed. Open `MetaMask` in your Chrome browser and import the development accounts created by `ganache`. Only one address is required to test the DApp.
 
-*truffle compile*
+6. Start the front end server on ```localhost:3000```
 
-This compiles the contract code and creates an ABI that helps the contract get deployed onto the blockchain.
+    ```
+    > git clone
+    > truffle migrate --reset
+    > truffle test
+    > npm run dev
+    ```
 
-Then, in the same directory, run the command:
+#### Frontend Interaction:
 
-*truffle migrate*
+The first development account (`account[0]`) is used to deploy the parent contract `VirtualPowerPlant.sol`. This address will also be an `admin` and the `owner`. Only one development account is required.
 
-This migrates our contract, it's dependencies, and other artifacts on the blockchain of our choice. Since we are only testing here, this migrates onto the ganache cli test chain.
+In `MetaMask`, set the connection to `Custom RPC` and the target RPC url to http://127.0.0.1:7545 to access the `ganache-cli` accounts.
 
-*truffle test*
+To test the DApp, follow instructions on the `index.html` homepage.
 
-Tests are written in javascript to test the functionality of the contract. This function shows the results from running tests on the ganache test chain.
+1. Start by investing some amount of Eth (around ~50 Eth should be sufficient) into the battery fund by filling in the form input. Click `Invest` to proceed.
 
-**Tests**
+2. Once the transaction has been accepted, you can start adding batteries to the fleet. Sample battery options are listed and available, select a few to add by clicking `Add to array`.
 
-The following tests are included in this package:
+3. Charge or discharge batteries by clicking `Execute Energy Transactions`. This will update battery charge currently filled and determine whether to charge (green) or discharge (red) the battery to the grid. Remaining investment will be updated to reflect the savings/cost of energy transacted.
 
-1. Admin Sign Up- Owner of the contract should be able to sign up admins, and verify who is an admin.
-2. Institution Sign Up - Admins should be able to add institutions.
-3. User Sign Up - Owner should be able to set the sign up fee. User should be able to sign up.
-4. Add Entry - Institution should be able to add entry to user's queue. User should be able to view queue.
-5. Confirm Entry - Users should be able to confirm entries in their queue into their resume.
-6. View Resume - Outside parties should be able to view user's resume.
+### Detailed Usage
 
-**Libraries**
+#### Contract Functions / Business Logic:
+##### VirtualPowerPlant.sol
+- `isAdmin`: check address is an admin
+- `setAdmin`: set admin to active or inactive
+- `toggleContractActive`: to implement circuit breaker design
+- `addBattery`: add battery to fleet based on battery characteristics/serial number
+- `chargeBattery`: charge battery, ie alter battery state based on amount charged
+- `changeBatteryThreshold`: alter battery characteristics
+- `decommissionBattery`: render batteries inactive
+###### Battery getter functions:
+- `getRelevantBatteryInfo`
+- `getBatteryChargeRate`
+- `getBatteryMapIndex`
 
- [Consensys repo](https://github.com/ConsenSys/ethereum-developer-tools-list).
+##### BatteryInvestment.sol
+- `updateRemainingInvestment`: update amount of remaining eth in fund
+- `investMoney`: ensure Eth is attached when calling this function
+- `triggerDividend`: admins can implement a dividend to send payment to investors
+- `withdraw`: for investors to retrieve their dividend withdrawal
+- `getInvestorInvestment`: getter function to retrieve investment amount for particular investor
 
-1. SafeMath -
-2. Ownable -
+##### BatteryEnergy.sol
+- `checkBatteryEnergy`: loop over batches of batteries, check transaction circumstances for each
+- `transactEnergy`: for an individual battery, determine energy transaction (charge or discharge)
+- `buyEnergy`
+- `sellEnergy`
+- `executeBatteryTransaction`: 
+- `getRealTimeEnergyPrice`
+- `energyDecisionAlgorithm`
 
-**Frontend:**
+#### Tests:
 
+Contract tests were written in JavaScript
 
+1. Contract Deployment: Check deployment of the parent ```VirtualPowerPlant.sol``` contract, which in turn deploys ```BatteryEnergy.sol``` and ```BatteryInvestment.sol``` contracts.
+2. Set admin: Check that a separate admin user can be set.
+3. Investment: Check that users can invest Eth into the battery fund
+4. Add batteries: Check that admin users can add batteries to the battery fleet, and can decommission them too.
+5. Transact Energy: Charge or discharge batteries based on the real time price of energy.
+6. Trigger Dividend: Trigger a dividend to reward investors. Dividend amounts per investor are based on their percentage contribution to the fund.
 
+#### Libraries
 
-*ganache-cli -p 7545*
-
-This starts the ganache test chain so that it is active for port 7545. The frontend is served through port 7545 so our ganache needs to be aligned.
-
-Open a new tab in the terminal and then in the same directory, run
-
-*npm run dev*
-
-That will start the frontend in a browser window with a local address. To interact with the contract through the browser, the metamask plug in must be set up. In order to import users from the ganache test environment, grab one of the private keys for an account generated by ganache. This can be found at the terminal window where ganache was launched.
-
-The first account, account[0] is the account used to launch the contract and that is the contract owner. You will need to grab 3 other account private keys so that you can load those into metamask and test the different functionalities of the front end.
-
-Go into Metamask and set the connection to "Custom RPC" and the target RPC url to http://127.0.0.1:7545. This connects the Ganache chain with metamask so accounts from ganache can be used through metamask. To import an account from ganache onto MetaMask, choose Create Account from the drop down in MetaMask and enter in the private key. Now you are free to interact with the DApp using MetaMask via the ganache test network!
-
-This frontend has the 3 main contract functionalities incorporated.
-
-1. First, you can sign up as a user on this Dapp. Use one of the accounts other than the contract owner. Click on the USER button and in the drop down, type in your name in the "Username" field. Click the Sign Up button and you will be added to the contract as a user. MetaMask should prompt you to approve a transaction. That is basically paying a nominal fee for the transaction to happen to run the function necessary to sign up the user.
-
-2. As a contract owner, you can also sign up other accounts as Admins on the contract. Go to metamask and change the identity to the owner's account. Then copy the address for another account and enter in that value in the "Admin Address" field. Click sign up. Now that account has been given Admin rights.
-
-3. Admins (including the owner) have the power to add institutions. Institutions are either universities, schools, or certificators who can add entries to the resume of the users. Add the "Institution Name," "Institution Address," and "Type" to sign up a verified institution.
-
-
-
-
-This project is a DApp example for a Virtual Power Plant. It consists of the following contracts:
-
-1) Virtual Power Plant
-contains the list of battery assets and defines ownership and admins users who can:
-- add batery assets
-- alter battery assets
-
-When this contract is deployed, it deploys the following 2 contracts:
-
-1) Energy Investment Fund
-where users can invest any amount of ether desired for battery purchase and battery array development
-they will earn a dividend based on money earned from trading of electricity on the real time market
-dividends are paid out whenever triggered by an admin, which will be equivalent to a percentage of the remaining investment fund
-
-This contract contains the following functions:
-
-
-2)
-by checking the real time price of electricity, determine whether to purhcase energy from the grid or discharge into the grid.
-Implement the energy purhcase and determine how much energy to purchase
-
-Further implementations:
-- integrate with oraclize to charge/discharge energy to batteries on a regular schedule
-- integrate with oraclize to pull true real time energy rates during each time period
-
-
-How to set it up:
-
-
-
-Tests and rationale:
-
-User stories:
-new investor:
-As an investor, I want to invest some amount of ether into the battery purchase fund
-
-new investor:
-as an existing investor, I want to receive dividends in order to earn on my investment
-
-virtualPowerPlant contract owner:
-as an owner, I want to add admins users in order to manage the battery array
-as an owner, i want to remove my
-
-- anyone with an address can invest any amount of ether into the battery investment fund.
-Benefits: At certain intervals, the creation of dividends can be triggered by admins or overall virtual power plant owner. Everyone
+1. [SafeMath](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol): Use battle tested math functions to avoid overflow errors, etc
+2. [Ownable](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ownership/Ownable.sol): Inherit ownership properties
