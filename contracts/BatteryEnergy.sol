@@ -212,6 +212,7 @@ contract BatteryEnergy {
     /// @return false to sell energy
     function energyDecisionAlgorithm (uint _priceThreshold, uint _energyPrice)
         private
+        pure
         returns (bool)
     {
         // for now, simple algo. If current price is less than threshold, buy

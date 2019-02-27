@@ -37,7 +37,7 @@ App = {
       App.web3Provider = web3.currentProvider;
     } else {
       // If no injected web3 instance is detected, fall back to Ganache
-      App.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
+      App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
     }
     web3 = new Web3(App.web3Provider);
 
@@ -56,6 +56,8 @@ App = {
         return App.showInvestmentAmount();
     }).then(function(){
         return App.labelBatteriesAdded();
+    }).then(function(){
+        return App.labelOwner();
     });
     $("#contractDeployed").text("Contract Deployed Successfully!");
     // bind button events
@@ -180,6 +182,14 @@ App = {
             }
           });
       }
+    },
+    labelOwner: async () => {
+
+      let VirtualPowerPlantInstance = await App.contracts.VirtualPowerPlant.deployed();
+
+      let owner = await VirtualPowerPlantInstance.owner();
+      $("#owner").text(owner);
+
     },
     showBatteryFill: async () => {
 
