@@ -1,5 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# ganache file secret
+file.secret
+
+# truffle build
+/build
+
 # dependencies
 /node_modules
 /.pnp

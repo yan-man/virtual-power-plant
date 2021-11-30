@@ -8,6 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@truffle/hdwallet-provider": "^1.7.0",
     "ganache-cli": "^6.12.2",
     "next": "12.0.4",
     "react": "17.0.2",
