@@ -6,6 +6,8 @@ import styles from "../styles/Home.module.css";
 import batteries from "./api/batteries";
 import VirtualPowerPlantInstructions from "../components/VirtualPowerPlantInstructions";
 import Title from "../components/Title";
+import batteryInfo from "./api/batteries";
+import BatteryCarousel from "../components/BatteryCarousel";
 
 export default function Home() {
   const year = new Date().getFullYear();
@@ -18,13 +20,12 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <Container>
+        <Container fluid>
           <Row>
             <Title />
           </Row>
-          <Row>
-            <VirtualPowerPlantInstructions data={batteries} />
-          </Row>
+          <VirtualPowerPlantInstructions />
+          <BatteryCarousel batteries={batteryInfo} />
         </Container>
       </main>
 
