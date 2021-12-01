@@ -1,118 +1,42 @@
 import React, { Component } from "react";
 import Carousel from "react-bootstrap/Carousel";
-
+import Row from "react-bootstrap/Row";
+import Image from "next/image";
+import styles from "../styles/BatteryCarousel.module.css";
 class BatteryList extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <div id="battTemplate">
-          <div className="col-sm-6 col-md-4 col-lg-3">
-            <div className="panel panel-default panel-pet">
-              {this.props.batteries.map((batt) => {
-                return (
-                  <React.Fragment>
-                    <div className="panel-heading">
-                      <h3 className="panel-title">
-                        {
-                          <React.Fragment>
-                            <div className="panel-heading">
-                              <h3 className="panel-title">{batt.name}</h3>
-                            </div>
-                            <div className="panel-body">
-                              <strong>Serial Number</strong>:{" "}
-                              <span className="battery-serialNumber">
-                                {batt.serialNumber}
-                              </span>
-                              <br />
-                              <strong>Capacity</strong>:{" "}
-                              <span className="battery-capacity">
-                                {batt.capacity}
-                              </span>{" "}
-                              MWh
-                              <br />
-                              <strong className="battery-currentFilledTitle">
-                                Current Filled
-                              </strong>
-                              :{" "}
-                              <span className="battery-currentFilled">
-                                {batt.currentFilled}
-                              </span>{" "}
-                              MWh
-                              <br />
-                              <strong>Cost</strong>:{" "}
-                              <span className="battery-cost">{batt.cost}</span>{" "}
-                              Eth
-                              <br />
-                              <strong>Price Threshold</strong>:{" "}
-                              <span className="battery-priceThreshold">
-                                {batt.priceThreshold}
-                              </span>{" "}
-                              Eth/kWh
-                              <br />
-                              <strong>Charge Rate</strong>:{" "}
-                              <span className="battery-chargeRate">
-                                {batt.chargeRate}
-                              </span>{" "}
-                              MWh/hr
-                              <br />
-                              <br />
-                              <button
-                                className="btn-add-battery"
-                                type="button"
-                                data-id="0"
-                              >
-                                Add to array
-                              </button>
-                            </div>
-                          </React.Fragment>
-                        }
-                      </h3>
-                    </div>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        <Carousel>
-          <Carousel.Item>
-            <img
-              className="d-block w-100"
-              src="holder.js/800x400?text=First slide&bg=373940"
-              alt="First slide"
-            />
-            <Carousel.Caption>
-              <h3>First slide label</h3>
-              <p>Nulla vitae elit libero, a pharetra augue mollis interdum.</p>
-            </Carousel.Caption>
-          </Carousel.Item>
-          <Carousel.Item>
-            <img
-              className="d-block w-100"
-              src="holder.js/800x400?text=Second slide&bg=282c34"
-              alt="Second slide"
-            />
-
-            <Carousel.Caption>
-              <h3>Second slide label</h3>
-              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-            </Carousel.Caption>
-          </Carousel.Item>
-          <Carousel.Item>
-            <img
-              className="d-block w-100"
-              src="holder.js/800x400?text=Third slide&bg=20232a"
-              alt="Third slide"
-            />
-
-            <Carousel.Caption>
-              <h3>Third slide label</h3>
-              <p>
-                Praesent commodo cursus magna, vel scelerisque nisl consectetur.
-              </p>
-            </Carousel.Caption>
-          </Carousel.Item>
-        </Carousel>
+        <Row className={styles.carousel}>
+          <Carousel>
+            {this.props.batteries.map((batt) => {
+              return (
+                <Carousel.Item>
+                  <img
+                    className="d-block w-50"
+                    src="noun_Battery_1582411.png"
+                    alt="Second slide"
+                  />
+                  <Carousel.Caption>
+                    <h4>{batt.name}</h4>
+                    <p>Battery Capacity: {batt.capacity} MWh</p>
+                    <p>Current Amount Filled: {batt.currentFilled} MWh</p>
+                    <p>Battery Cost: {batt.cost} Eth</p>
+                    <p>Price Threshold: {batt.priceThreshold} Eth/kWh</p>
+                    <p>Charge Rate: {batt.chargeRate} MWh/hr</p>
+                    <button
+                      className="btn-add-battery"
+                      type="button"
+                      data-id="0"
+                    >
+                      Add to array
+                    </button>
+                  </Carousel.Caption>
+                </Carousel.Item>
+              );
+            })}
+          </Carousel>
+        </Row>
       </React.Fragment>
     );
   }
