@@ -8,7 +8,7 @@ class BatteryList extends React.Component {
     return (
       <React.Fragment>
         <Row className={styles.carousel}>
-          <Carousel>
+          <Carousel interval={null}>
             {this.props.batteries.map((batt) => {
               return (
                 <Carousel.Item>
