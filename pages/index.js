@@ -1,11 +1,14 @@
 import Head from "next/head";
 import Image from "next/image";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
 import styles from "../styles/Home.module.css";
 import batteries from "./api/batteries";
-import Battery from "../components/Battery";
+import VirtualPowerPlantInstructions from "../components/VirtualPowerPlantInstructions";
+import Title from "../components/Title";
 
 export default function Home() {
-  console.log(batteries);
+  const year = new Date().getFullYear();
   return (
     <div className={styles.container}>
       <Head>
@@ -15,21 +18,17 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <Battery />
+        <Container>
+          <Row>
+            <Title />
+          </Row>
+          <Row>
+            <VirtualPowerPlantInstructions data={batteries} />
+          </Row>
+        </Container>
       </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+      <footer className={styles.footer}>Yan Man. {year}</footer>
     </div>
   );
 }
