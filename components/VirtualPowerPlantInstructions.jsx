@@ -42,7 +42,12 @@ class VirtualPowerPlantInstructions extends Component {
             <button className="btn-invest" type="button">
               Invest
             </button>
-            <input className="investmentAmount" placeholder="[Eth]"></input>
+            <input
+              type="number"
+              name="investmentAmount"
+              className="investmentAmount"
+              placeholder="[Eth]"
+            ></input>
           </div>
         </Row>
         <Row>

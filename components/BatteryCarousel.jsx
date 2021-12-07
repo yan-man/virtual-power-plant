@@ -9,9 +9,9 @@ class BatteryList extends React.Component {
       <React.Fragment>
         <Row className={styles.carousel}>
           <Carousel interval={null}>
-            {this.props.batteries.map((batt) => {
+            {this.props.batteries.map((batt, ind) => {
               return (
-                <Carousel.Item>
+                <Carousel.Item key={ind}>
                   <img
                     className="d-block w-50"
                     src="noun_Battery_1582411.png"

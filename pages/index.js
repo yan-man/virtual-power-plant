@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import Container from "react-bootstrap/Container";
@@ -8,10 +9,17 @@ import VirtualPowerPlantInstructions from "../components/VirtualPowerPlantInstru
 import Title from "../components/Title";
 import batteryInfo from "./api/batteries";
 import BatteryCarousel from "../components/BatteryCarousel";
+import web3Contracts from "../services/web3Contracts";
 
 function Home() {
   const year = new Date().getFullYear();
+  useEffect(() => {
+    console.log("use effect; init web3");
 
+    const Web3Contracts = new web3Contracts();
+    // console.log(Web3Contracts);
+    Web3Contracts.init();
+  }, []);
   return (
     <div className={styles.container}>
       <Head>
@@ -34,23 +42,4 @@ function Home() {
     </div>
   );
 }
-
-export async function initWeb3() {
-  // Is there an injected web3 instance?
-  if (typeof web3 !== "undefined") {
-    App.web3Provider = web3.currentProvider;
-  } else {
-    // If no injected web3 instance is detected, fall back to Ganache
-    App.web3Provider = new Web3.providers.HttpProvider("http://localhost:7545");
-  }
-  web3 = new Web3(App.web3Provider);
-
-  // return App.initContract();
-}
-
-// export async function getStaticProps() {
-//   console.log("get static props");
-//   return {};
-// }
-
 export default Home;
