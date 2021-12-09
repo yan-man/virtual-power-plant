@@ -4,8 +4,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 
 import "./VirtualPowerPlant.sol";
-// import "./SafeMath.sol";
-// import "./Math.sol";
 
 /// @author Yan Man
 /// @title Manage charging/discharging of batteries
@@ -72,7 +70,7 @@ contract BatteryEnergy {
         returns (uint calculateEnergyToTransact)
     {
         // convert seconds to hours
-        uint purchaseIntervalHours = SafeMath.div(purchaseInterval, 3600);
+        uint purchaseIntervalHours = purchaseInterval.div(3600);
         // how much energy is available in battery
         uint emptyCapacity = _capacity - _currentFilled;
 
@@ -82,17 +80,18 @@ contract BatteryEnergy {
             require(emptyCapacity > 0, "Battery should have remaining capacity in order to charge");
             // charge rate * time interval gives total energy amount to be added
             // but energy amount cannot exceed empty capacity
-            calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), emptyCapacity);
+            uint charge = _chargeRate.mul(purchaseIntervalHours);
+            calculateEnergyToTransact = charge.min(emptyCapacity);
             // find remaining investment in fund
             uint remainingInvestment = (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment();
             // cost = energy amount * energy price
-            uint costOfEnergyPurchase = SafeMath.mul(calculateEnergyToTransact, _energyPrice);
+            uint costOfEnergyPurchase = calculateEnergyToTransact.mul(_energyPrice);
             // make sure there is enough investment to cover energy purchase
             if (costOfEnergyPurchase > remainingInvestment) {
                 // energy purchase costs at most are the remaining investment
                 costOfEnergyPurchase = remainingInvestment;
                 // back calculate the energy based on the max eth available
-                calculateEnergyToTransact = SafeMath.div(remainingInvestment, _energyPrice);
+                calculateEnergyToTransact = remainingInvestment.div(_energyPrice);
             }
             // purchase energy
             buyEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
@@ -103,7 +102,7 @@ contract BatteryEnergy {
             );
         } else {
             // maximum energy to sell is the current amount in the battery
-            calculateEnergyToTransact = Math.min(SafeMath.mul(_chargeRate, purchaseIntervalHours), _currentFilled);
+            calculateEnergyToTransact = Math.min(_chargeRate.mul(purchaseIntervalHours), _currentFilled);
             sellEnergy(_batteryID, calculateEnergyToTransact, _energyPrice);
             emit LogEnergySold(
                 _serialNumber,
@@ -124,10 +123,9 @@ contract BatteryEnergy {
         uint _energyPrice
     ) private returns (bool) {
         // calculate remaining investment money after energy purchase
-        uint newRemainingInvestment = SafeMath.sub(
-            (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment(),
-            SafeMath.mul(
-                _energyAmountToPurchase,
+        uint oldRemainingInvestment = VirtualPowerPlantContract.batteryInvestmentContract().remainingInvestment();
+        uint newRemainingInvestment = oldRemainingInvestment.sub(
+            _energyAmountToPurchase.mul(
                 _energyPrice
             )
         );
@@ -151,10 +149,10 @@ contract BatteryEnergy {
         uint _energyAmountToSell,
         uint _energyPrice
     ) private returns (bool) {
-        uint newRemainingInvestment = SafeMath.add(
-            (VirtualPowerPlantContract.batteryInvestmentContract()).remainingInvestment(),
-            SafeMath.mul(
-                _energyAmountToSell,
+
+        uint oldRemainingInvestment = VirtualPowerPlantContract.batteryInvestmentContract().remainingInvestment();
+        uint newRemainingInvestment = oldRemainingInvestment.add(
+            _energyAmountToSell.mul(
                 _energyPrice
             )
         );
