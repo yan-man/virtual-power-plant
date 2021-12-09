@@ -11,6 +11,7 @@ class web3Contracts {
     await this.initWeb3();
     await this.initAccounts();
   };
+  constructor() {}
 
   async initWeb3() {
     console.log("initWeb3");
@@ -42,6 +43,42 @@ class web3Contracts {
     this.accounts = await this.web3.eth.getAccounts();
   }
 
+  async invest(amount) {
+    await this.contracts.BatteryInvestment.methods.investMoney().send({
+      from: this.accounts[0],
+      value: this.web3.utils.toWei(amount, "ether"),
+    });
+  }
+
+  async addBattery(battery) {
+    const batteryId = await this.contracts.VirtualPowerPlant.methods
+      .addBattery(
+        battery.capacity,
+        battery.currentFilled,
+        this.web3.utils.toWei(battery.cost, "ether"),
+        battery.serialNumber,
+        battery.priceThreshold,
+        battery.chargeRate
+      )
+      .send({
+        from: this.accounts[0],
+      });
+
+    let numBatteries = await this.contracts.VirtualPowerPlant.methods
+      .numBatteries()
+      .call();
+
+    let remaining = await this.contracts.BatteryInvestment.methods
+      .remainingInvestment()
+      .call();
+    // console.log(numBatteries);
+    // console.log(remaining);
+
+    // for (let i = 0; i <= numBatteries; i++) {
+    //   console.log(i);
+    // }
+  }
+
   async initContract() {
     const batteryInvestment = require("../build/contracts/BatteryInvestment.json");
     const virtualPowerPlant = require("../build/contracts/VirtualPowerPlant.json");
@@ -55,17 +92,12 @@ class web3Contracts {
       batteryInvestment.abi,
       batteryInvestment.networks[netid].address
     );
-
-    // await this.contracts.BatteryInvestment.methods.investMoney().send({
-    //   from: this.accounts[0],
-    //   value: this.web3.utils.toWei("0.001", "ether"),
-    // });
   }
 
   async getBatteryInvestmentAddress() {
     try {
       const batteryInvestmentAddress =
-        await this.contracts.VirtualPowerPlant.methods
+        await this.contracts.VirtualPowerPlanrt.methods
           .batteryInvestmentAddress()
           .call();
       // console.log(batteryInvestmentAddress);

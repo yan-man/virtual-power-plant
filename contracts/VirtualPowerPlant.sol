@@ -1,5 +1,8 @@
 pragma solidity >=0.5.0;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
+
 import "./BatteryInvestment.sol";
 import "./BatteryEnergy.sol";
 import "./Ownable.sol"; // to manage ownership addresses
@@ -7,6 +10,8 @@ import "./Ownable.sol"; // to manage ownership addresses
 /// @author Yan Man
 /// @title A Virtual Power Plant implementation. Consensys Final Project Winter 2018/19
 contract VirtualPowerPlant is Ownable {
+
+    using SafeMath for uint;
 
     // Type declarations
     // Battery contains all necessary battery characteristics
@@ -41,6 +46,7 @@ contract VirtualPowerPlant is Ownable {
     event LogChangeAdmin (address adminAddress, bool status); // when admin status is changed
     event LogBatteryActive (bytes32 serialNumber, bool newStatus); // when battery is decommissioned or added
     event LogBatteryThresholdChanged (uint newThreshold);
+    // event LogBatteryDetails (uint remainingInvestment, uint cost); // when battery is decommissioned or added
 
     // Modifiers
     // check address is a valid admin or calling from deployed contract
@@ -61,8 +67,10 @@ contract VirtualPowerPlant is Ownable {
     // - remaining investment has enough funds to pay for the cost of the battery
     // - price threshold is positive
     modifier isBatteryValidModifier (uint _capacity, uint _currentFilled, uint _cost, uint _priceThreshold) {
-        require(_capacity >= _currentFilled, "Capacity must exceed amount filled");
-        require(batteryInvestmentContract.remainingInvestment() >= _cost, "Not enough investment to purchase");
+        // emit LogBatteryDetails(batteryInvestmentContract.remainingInvestment(), _cost);
+        uint remainingInvestment = batteryInvestmentContract.remainingInvestment();
+        require(_capacity.sub(_currentFilled) >= 0, "Capacity must exceed amount filled");
+        require(remainingInvestment.sub(_cost) >= 0, "Not enough investment to purchase");
         require(_priceThreshold >= 0, "Must have a valid price threshold");
         _;
     }
@@ -91,6 +99,24 @@ contract VirtualPowerPlant is Ownable {
         return true;
     }
 
+    
+    function setContractAddress (
+        address _contractAddress
+    )
+        public
+    {
+      batteryInvestmentAddress = _contractAddress;
+      batteryInvestmentContract = BatteryInvestment(batteryInvestmentAddress);
+    }
+
+function getBatteryMapping (
+    )
+        public view returns (uint[] memory)
+    {
+      return batteryMapping;
+    }
+    
+
     /// @notice add battery to array of storage assets
     /// @return battery ID of battery added
     function addBattery (
@@ -105,26 +131,33 @@ contract VirtualPowerPlant is Ownable {
         isAdminModifier(msg.sender)
         isBatteryValidModifier(_capacity, _currentFilled, _cost, _priceThreshold)
         stopInEmergency()
-        returns (uint batteryID)
+        returns (uint response)
     {
-        batteryID = batteries.length; // index in the array, corresponds to current length of array
+        uint batteryID = batteries.length; // index in the array, corresponds to current length of array
         // add each characteristic to create Battery struct, push to array
-        batteries.push(Battery({
-            capacity: _capacity,
-            currentFilled: _currentFilled,
-            dateAdded: now,
-            cost: _cost,
-            serialNumber: _serialNumber,
-            priceThreshold: _priceThreshold,
-            chargeRate: _chargeRate,
-            isActive: true,
-            mapIndex: batteryID
-        }));
-        numBatteries++; // increase number of active batteries
+
+        Battery memory newBatt;
+        newBatt.capacity = _capacity;
+        newBatt.currentFilled = _currentFilled;
+        newBatt.cost = _cost;
+        newBatt.serialNumber = _serialNumber;
+        newBatt.priceThreshold = _priceThreshold;
+        newBatt.chargeRate = _chargeRate;
+        newBatt.isActive = true;
+        newBatt.mapIndex = batteryID;
+
+        batteries.push(newBatt);
+        numBatteries = numBatteries.add(1); // increase number of active batteries
+        
         batteryMapping.push(batteryID); // record battery ID in mapping
+
+        uint remainingInvestment = batteryInvestmentContract.remainingInvestment();
         // update remaining investment with cost of battery
-        uint _newRemainingInvestment = batteryInvestmentContract.remainingInvestment() - _cost;
-        batteryInvestmentContract.updateRemainingInvestment(_newRemainingInvestment);
+        uint _newRemainingInvestment = remainingInvestment.sub(_cost);
+        
+         batteryInvestmentContract.updateRemainingInvestment(_newRemainingInvestment);
+
+         response = batteries[batteryID].mapIndex;
         emit LogBatteryActive(_serialNumber, true);
     }
 

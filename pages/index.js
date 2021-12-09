@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import Container from "react-bootstrap/Container";
@@ -9,17 +9,15 @@ import VirtualPowerPlantInstructions from "../components/VirtualPowerPlantInstru
 import Title from "../components/Title";
 import batteryInfo from "./api/batteries";
 import BatteryCarousel from "../components/BatteryCarousel";
-import web3Contracts from "../services/web3Contracts";
+// import web3Contracts from "../services/web3Contracts";
 
-function Home() {
+function Home({ Web3Contracts }) {
   const year = new Date().getFullYear();
-  useEffect(() => {
-    console.log("use effect; init web3");
+  // let Web3Contracts;
+  // const [Web3Contracts, setWeb3Contracts] = useState(0);
+  // useEffect(async () => {
 
-    const Web3Contracts = new web3Contracts();
-    // console.log(Web3Contracts);
-    Web3Contracts.init();
-  }, []);
+  // }, []);
   return (
     <div className={styles.container}>
       <Head>
@@ -42,4 +40,9 @@ function Home() {
     </div>
   );
 }
+// Home.getInitialProps = async (ctx) => {
+
+//   // console.log(Web3Contracts);
+//   return { Web3Contracts };
+// };
 export default Home;

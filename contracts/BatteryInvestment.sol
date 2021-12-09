@@ -82,7 +82,7 @@ contract BatteryInvestment {
     /// @return whether var succesfully updated
     function updateRemainingInvestment (uint _remainingInvestment) external returns (bool) {
         remainingInvestment = _remainingInvestment;
-        return true;
+        return (remainingInvestment==_remainingInvestment);
     }
 
     /// @notice invest eth into fund
@@ -108,6 +108,9 @@ contract BatteryInvestment {
         totalInvestment += investAmount;
         // update the remaining amount of investment
         remainingInvestment += investAmount;
+        
+        VirtualPowerPlantContract.setContractAddress(address(this));
+
         emit LogNewInvestment(msg.sender, investAmount);
     }
 

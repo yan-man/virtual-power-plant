@@ -2,28 +2,115 @@ import React, { Component } from "react";
 import Row from "react-bootstrap/Row";
 import Container from "react-bootstrap/Container";
 import Col from "react-bootstrap/Col";
-
+import web3Contracts from "../services/web3Contracts";
 class VirtualPowerPlantInstructions extends Component {
+  state = {
+    value: 0.0,
+    totalInvestment: 0,
+    remainingInvestment: 0,
+    numBatteries: 0,
+  };
+  Web3Contracts = {};
+  componentDidMount = async () => {
+    console.log("use effect; init web3");
+    this.timerID = setInterval(() => this.tick(), 1000);
+
+    this.Web3Contracts = new web3Contracts();
+    await this.Web3Contracts.init();
+    await this.updateStats();
+  };
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+  async tick() {
+    this.updateStats();
+  }
+
+  updateStats = async () => {
+    if (this.Web3Contracts.contracts) {
+      let totalInvestment =
+        await this.Web3Contracts.contracts.BatteryInvestment.methods
+          .totalInvestment()
+          .call();
+      totalInvestment = this.Web3Contracts.web3.utils.fromWei(
+        totalInvestment,
+        "ether"
+      );
+
+      let remainingInvestment =
+        await this.Web3Contracts.contracts.BatteryInvestment.methods
+          .remainingInvestment()
+          .call();
+      remainingInvestment = this.Web3Contracts.web3.utils.fromWei(
+        remainingInvestment,
+        "ether"
+      );
+
+      //       let test = await this.Web3Contracts.contracts.VirtualPowerPlant.methods
+      //           .batteryInvestmentAddress()
+      //           .call();
+      //           console.log(test);
+      //  let test2 = await this.Web3Contracts.contracts.VirtualPowerPlant.methods
+      //           .batteryInvestmentContract()
+      //           .call();
+      //           console.log(test2);
+
+      // console.log(this.Web3Contracts.contracts.BatteryInvestment.options.address)
+
+      let numBatteries =
+        await this.Web3Contracts.contracts.VirtualPowerPlant.methods
+          .numBatteries()
+          .call();
+
+      // console.log(remainingInvestment)
+      // console.log(totalInvestment)
+      // console.log(numBatteries)
+
+      let batteryMapping =
+        await this.Web3Contracts.contracts.VirtualPowerPlant.methods
+          .getBatteryMapping()
+          .call();
+
+      console.log(batteryMapping);
+      for (let i = 0; i <= numBatteries; i++) {
+        // console.log(i);
+      }
+
+      this.setState({ totalInvestment, remainingInvestment, numBatteries });
+    }
+  };
+  handleSubmit = async (event) => {
+    event.preventDefault();
+    await this.Web3Contracts.invest(String(this.state.value));
+    await this.updateStats();
+  };
+  handleChange = (event) => {
+    this.setState({ value: event.target.value });
+  };
   render() {
+    // console.log(this.Web3Contracts);
     return (
       <React.Fragment>
         <Row>
           <Col>
             <h5>Total Amount Invested:</h5>
             <h4>
-              <span id="totalInvestment">0</span> Eth
+              <span id="totalInvestment">{this.state.totalInvestment}</span> Eth
             </h4>
           </Col>
           <Col>
-            <h5>Remaining Amount Invested:</h5>
+            <h5>Remaining Amount Left:</h5>
             <h4>
-              <span id="remainingInvestment">0</span> Eth
+              <span id="remainingInvestment">
+                {this.state.remainingInvestment}
+              </span>{" "}
+              Eth
             </h4>
           </Col>
           <Col>
-            <h5>Number of Battery Assets:</h5>
+            <h5>Number of Batteries:</h5>
             <h4>
-              <span id="numBatteries">0</span>
+              <span id="numBatteries">{this.state.numBatteries}</span>
             </h4>
           </Col>
         </Row>
@@ -38,17 +125,23 @@ class VirtualPowerPlantInstructions extends Component {
           </p>
         </Row>
         <Row>
-          <div>
-            <button className="btn-invest" type="button">
-              Invest
-            </button>
-            <input
-              type="number"
-              name="investmentAmount"
-              className="investmentAmount"
-              placeholder="[Eth]"
-            ></input>
-          </div>
+          <form onSubmit={this.handleSubmit}>
+            <div>
+              <button
+                className="btn-invest"
+                type="button"
+                onClick={this.handleSubmit}
+              >
+                Invest
+              </button>
+              <input
+                onChange={this.handleChange}
+                className="investmentAmount"
+                placeholder="[Eth]"
+                value={this.state.value}
+              ></input>
+            </div>
+          </form>
         </Row>
         <Row>
           <h3>Step 2:</h3>
@@ -58,7 +151,28 @@ class VirtualPowerPlantInstructions extends Component {
             accounts[0]) to maintain admin permissions (Click "Add to array")
           </p>
           <p>
-            Virtual Power Plant Admin: <span id="owner"></span>
+            Virtual Power Plant Admin:{" "}
+            <span id="owner">
+              {this.Web3Contracts.accounts
+                ? this.Web3Contracts.accounts[0]
+                : ""}
+            </span>
+          </p>
+          <p>
+            Virtual Power Plant Contract:{" "}
+            <span id="virtualPowerPlantContract">
+              {this.Web3Contracts.contracts
+                ? this.Web3Contracts.contracts.VirtualPowerPlant.options.address
+                : ""}
+            </span>
+          </p>
+          <p>
+            Battery Investment Contract:{" "}
+            <span id="batteryInvestment">
+              {this.Web3Contracts.contracts
+                ? this.Web3Contracts.contracts.BatteryInvestment.options.address
+                : ""}
+            </span>
           </p>
         </Row>
         <Row>

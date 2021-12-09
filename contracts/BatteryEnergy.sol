@@ -1,12 +1,17 @@
 pragma solidity >=0.5.0;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+
 import "./VirtualPowerPlant.sol";
-import "./SafeMath.sol";
-import "./Math.sol";
+// import "./SafeMath.sol";
+// import "./Math.sol";
 
 /// @author Yan Man
 /// @title Manage charging/discharging of batteries
 contract BatteryEnergy {
+
+    using SafeMath for uint;
 
     // Type declarations
     VirtualPowerPlant VirtualPowerPlantContract;

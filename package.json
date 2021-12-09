@@ -8,6 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^2.5.1",
     "@truffle/contract": "^4.3.43",
     "@truffle/hdwallet-provider": "^1.7.0",
     "bootstrap": "^5.1.3",

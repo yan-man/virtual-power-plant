@@ -1,8 +1,10 @@
-var VirtualPowerPlant = artifacts.require("./VirtualPowerPlant.sol");
-var BatteryInvestment = artifacts.require("./BatteryInvestment.sol");
+const VirtualPowerPlant = artifacts.require("./VirtualPowerPlant.sol");
+const BatteryInvestment = artifacts.require("./BatteryInvestment.sol");
+const BatteryEnergy = artifacts.require("./BatteryEnergy.sol");
 
 module.exports = function (deployer) {
   deployer.deploy(VirtualPowerPlant).then(function () {
-    return deployer.deploy(BatteryInvestment, VirtualPowerPlant.address, 2);
+    deployer.deploy(BatteryInvestment, VirtualPowerPlant.address, 2);
+    return deployer.deploy(BatteryEnergy, VirtualPowerPlant.address);
   });
 };
