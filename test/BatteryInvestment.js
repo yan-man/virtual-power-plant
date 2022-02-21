@@ -28,7 +28,7 @@ contract("BatteryInvestment contract", function (accounts) {
     capacity: 100,
     currentFilled: 20,
     cost: 13e5,
-    serialNumber: "0x1",
+    serialNumber: 0x6164643100000000000000000000000000000000000000000000000000000000, // add1
     priceThreshold: 7e3,
     chargeRate: 4,
   };
@@ -37,7 +37,7 @@ contract("BatteryInvestment contract", function (accounts) {
     capacity: 110,
     currentFilled: 25,
     cost: 12e5,
-    serialNumber: "0x2",
+    serialNumber: 0x6164643200000000000000000000000000000000000000000000000000000000, // add2
     priceThreshold: 10e3,
     chargeRate: 6,
   };
@@ -46,7 +46,7 @@ contract("BatteryInvestment contract", function (accounts) {
     capacity: 90,
     currentFilled: 22,
     cost: 11e5,
-    serialNumber: "0x3",
+    serialNumber: 0x6164643300000000000000000000000000000000000000000000000000000000, // add3
     priceThreshold: 5e3,
     chargeRate: 8,
   };
@@ -55,7 +55,7 @@ contract("BatteryInvestment contract", function (accounts) {
     capacity: 80,
     currentFilled: 30,
     cost: 10e5,
-    serialNumber: "0x4",
+    serialNumber: 0x6164643400000000000000000000000000000000000000000000000000000000, // add4
     priceThreshold: 4e3,
     chargeRate: 20,
   };
@@ -64,7 +64,7 @@ contract("BatteryInvestment contract", function (accounts) {
     capacity: 70,
     currentFilled: 26,
     cost: 9e5,
-    serialNumber: "0x5",
+    serialNumber: 0x6164643500000000000000000000000000000000000000000000000000000000, // add5
     priceThreshold: 3e3,
     chargeRate: 11,
   };
@@ -100,7 +100,7 @@ contract("BatteryInvestment contract", function (accounts) {
       from: investor1,
       value: 2500000,
     });
-    // console.log(investment);
+    console.log(investment);
 
     const vals2 = (
       await batteryInvestmenttest.remainingInvestment.call()

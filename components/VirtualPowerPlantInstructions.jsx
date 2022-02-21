@@ -3,14 +3,18 @@ import Row from "react-bootstrap/Row";
 import Container from "react-bootstrap/Container";
 import Col from "react-bootstrap/Col";
 import web3Contracts from "../services/web3Contracts";
+
+import ExistingBatteryCarousel from "./ExistingBatteryCarousel";
 class VirtualPowerPlantInstructions extends Component {
   state = {
     value: 0.0,
     totalInvestment: 0,
     remainingInvestment: 0,
     numBatteries: 0,
+    batteryList: {},
   };
   Web3Contracts = {};
+  timerID;
   componentDidMount = async () => {
     console.log("use effect; init web3");
     this.timerID = setInterval(() => this.tick(), 1000);
@@ -23,8 +27,44 @@ class VirtualPowerPlantInstructions extends Component {
     clearInterval(this.timerID);
   }
   async tick() {
+    this.updateBatteryList();
     this.updateStats();
   }
+
+  updateBatteryList = async () => {
+    if (this.Web3Contracts.contracts) {
+      let batteryMapping =
+        await this.Web3Contracts.contracts.VirtualPowerPlant.methods
+          .getBatteryMapping()
+          .call();
+
+      let newBatteryList = await batteryMapping.map(async (batteryId) => {
+        let result =
+          await this.Web3Contracts.contracts.VirtualPowerPlant.methods
+            .getBattery(batteryId)
+            .call();
+        let newBattery = {
+          capacity: result.capacity,
+          chargeRate: result.chargeRate,
+          cost: result.cost,
+          currentFilled: result.currentFilled,
+          dateAdded: result.dateAdded,
+          isActive: result.isActive,
+          mapIndex: result.mapIndex,
+          priceThreshold: result.priceThreshold,
+          serialNumber: result.serialNumber,
+        };
+        return newBattery;
+      });
+      await newBatteryList;
+      console.log(newBatteryList);
+      // this.setState({batteryList: batteryList})
+    }
+
+//     promiseB = promiseA.then(function(result) {
+//   return result + 1;
+// });
+  };
 
   updateStats = async () => {
     if (this.Web3Contracts.contracts) {
@@ -61,21 +101,6 @@ class VirtualPowerPlantInstructions extends Component {
         await this.Web3Contracts.contracts.VirtualPowerPlant.methods
           .numBatteries()
           .call();
-
-      // console.log(remainingInvestment)
-      // console.log(totalInvestment)
-      // console.log(numBatteries)
-
-      let batteryMapping =
-        await this.Web3Contracts.contracts.VirtualPowerPlant.methods
-          .getBatteryMapping()
-          .call();
-
-      console.log(batteryMapping);
-      for (let i = 0; i <= numBatteries; i++) {
-        // console.log(i);
-      }
-
       this.setState({ totalInvestment, remainingInvestment, numBatteries });
     }
   };
@@ -175,6 +200,7 @@ class VirtualPowerPlantInstructions extends Component {
             </span>
           </p>
         </Row>
+        <Row>{/* <ExistingBatteryCarousel batteries={batteryInfo} /> */}</Row>
         <Row>
           <div id="batteryRow" className="row"></div>
           <h3>Step 3:</h3>

@@ -33,7 +33,7 @@ contract VirtualPowerPlant is Ownable {
   address public virtualPowerPlantAddress;
   address public batteryInvestmentAddress;
   address public batteryEnergyAddress;
-  uint256 public numBatteries = 1; // number of active batteries
+  uint256 public numBatteries = 0; // number of active batteries
   uint256 public numAdmins = 0; // number of active admins
   uint256[] public batteryMapping; // array to log the battery's index in batteries array
   mapping(address => bool) public admins; // addresses of admins
@@ -121,6 +121,35 @@ contract VirtualPowerPlant is Ownable {
   function setContractAddress(address _contractAddress) public {
     batteryInvestmentAddress = _contractAddress;
     batteryInvestmentContract = BatteryInvestment(batteryInvestmentAddress);
+  }
+
+  function getBattery(uint256 index)
+    public
+    view
+    returns (
+      uint256 capacity,
+      uint256 currentFilled,
+      uint256 dateAdded,
+      uint256 cost,
+      bytes32 serialNumber,
+      uint256 priceThreshold,
+      uint256 chargeRate,
+      bool isActive,
+      uint256 mapIndex
+    )
+  {
+    Battery memory b = batteries[index];
+    return (
+      b.capacity,
+      b.currentFilled,
+      b.dateAdded,
+      b.cost,
+      b.serialNumber,
+      b.priceThreshold,
+      b.chargeRate,
+      b.isActive,
+      b.mapIndex
+    );
   }
 
   function getBatteryMapping() public view returns (uint256[] memory) {

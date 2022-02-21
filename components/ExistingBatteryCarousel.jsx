@@ -6,17 +6,6 @@ import styles from "../styles/BatteryCarousel.module.css";
 
 import web3Contracts from "../services/web3Contracts";
 class BatteryCarousel extends React.Component {
-  Web3Contracts = {};
-  componentDidMount = async () => {
-    console.log("use effect; init web3");
-    this.Web3Contracts = new web3Contracts();
-    await this.Web3Contracts.init();
-  };
-  handleAddBattery = async (event) => {
-    // console.log(this.Web3Contracts);
-    // console.log(event)
-    this.Web3Contracts.addBattery(event);
-  };
   render() {
     return (
       <React.Fragment>
@@ -42,7 +31,9 @@ class BatteryCarousel extends React.Component {
                       type="button"
                       data-id="0"
                       value={battery}
-                      onClick={() => {this.handleAddBattery(battery)}}
+                      onClick={() => {
+                        this.handleAddBattery(battery);
+                      }}
                     >
                       Add to array
                     </button>

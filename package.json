@@ -5,8 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "predev": "prettier --write 'contracts/**/*.sol'"
+    "lint": "next lint"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.1",

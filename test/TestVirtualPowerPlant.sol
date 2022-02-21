@@ -29,28 +29,35 @@ contract TestVirtualPowerPlant {
   // }
 
   function testAddBattery() public {
-    // virtualPowerPlant.addBattery(100, 20, 100000, "123", 1000, 20);
+    virtualPowerPlant.addBattery(
+      100,
+      20,
+      100000,
+      0x7465737400000000000000000000000000000000000000000000000000000000,
+      1000,
+      20
+    );
     // virtualPowerPlant.send(100000);
 
     // uint256 val = 1;
     // uint256 expected = 1;
-    address[] memory admins = virtualPowerPlant.getAdmin();
-    address[] memory yan;
-    address admin = admins[0];
+    // address[] memory admins = virtualPowerPlant.getAdmin();
+    // address[] memory yan;
+    // address admin = admins[0];
 
-    (bool success, bytes memory data) = address(virtualPowerPlant).delegatecall(
-      abi.encodeWithSignature("getUser()")
-    ); // now delegated to the admin user properly
-    emit Logbool(success);
-    address result = abi.decode(data, (address));
+    // (bool success, bytes memory data) = address(virtualPowerPlant).delegatecall(
+    //   abi.encodeWithSignature("getUser()")
+    // ); // now delegated to the admin user properly
+    // emit Logbool(success);
+    // address result = abi.decode(data, (address));
 
-    emit LogAddress(result);
+    // emit LogAddress(result);
 
-    // emit LogNum(numBatts);
-    emit LogVal(admins);
-    emit LogAddress(msg.sender);
-    emit LogAddress(address(this));
-    emit LogAddress(address(virtualPowerPlant));
+    // // emit LogNum(numBatts);
+    // emit LogVal(admins);
+    // emit LogAddress(msg.sender);
+    // emit LogAddress(address(this));
+    // emit LogAddress(address(virtualPowerPlant));
     // emit LogAddress(DeployedAddresses.VirtualPowerPlant());
 
     // Assert.equal(getAdmin[0], yan[0], getAdmin[0]);
@@ -73,13 +80,13 @@ contract TestVirtualPowerPlant {
 
     // emit Logbool(success2);
 
-    uint256 expected = 1;
+    // uint256 expected = 1;
 
-    Assert.equal(
-      virtualPowerPlant.numBatteries(),
-      expected,
-      "Number of batteries should be 1"
-    );
+    // Assert.equal(
+    //   virtualPowerPlant.numBatteries(),
+    //   expected,
+    //   "Number of batteries should be 1"
+    // );
 
     // (bool success3, bytes memory data3) = address(virtualPowerPlant)
     //   .delegatecall(
