@@ -1,6 +1,9 @@
 ## Virtual Power Plant (VPP) DApp
+
 #### VPP DApp is a sample implementation of a Virtual Power Plant based on a fleet of distributed battery resources which are managed by an investment fund.
+
 ###### Consensys Course Final Project
+
 Author: [Yan Man](https://github.com/yan-man)
 
 ### I. Overview:
@@ -10,6 +13,7 @@ Although customers typically pay a flat energy rate for electricity throughout t
 With flexible energy storage resources such as batteries, energy can be stored when real time energy demand is low, and discharged to the grid when demand, and prices, are high. This serves to effectively smooth the aggregated demand curve throughout the day, improving grid efficiency and stability as well as creating profit through energy trading.
 
 ##### Example Usage:
+
 In JavaScript, create a VirtualPowerPlant contract from its artifact. You can then begin to interact with its contract functions directly via JS. Make sure there are sufficient funds invested before adding batteries to the array.
 
 ```
@@ -27,11 +31,12 @@ VirtualPowerPlant.addBattery(
 Otherwise, interact with the DApp via the frontend included, which will allow you to invest funds, add batteries, and execute energy transactions.
 
 ### II. Getting Started
+
 #### Required installations:
 
 Install the following packages. DApp was developed in the following versions in a [Ubuntu64 18.04](https://www.ubuntu.com/download/desktop) environment.
 
-1. [Truffle  v5.0.2 (core: 5.0.2)](https://truffleframework.com/docs/truffle/getting-started/installation)
+1. [Truffle v5.0.2 (core: 5.0.2)](https://truffleframework.com/docs/truffle/getting-started/installation)
 2. [Ganache CLI v6.2.3 (ganache-core: 2.3.1)](https://truffleframework.com/docs/ganache/quickstart)
 3. [npm v3.5.2](https://www.npmjs.com/get-npm)
 4. [Node v8.10.0](https://nodejs.org/en/)
@@ -44,35 +49,41 @@ VPP-Dapp is a truffle project that contains all necessary contract, library, mig
 
 1. Clone the repo to your directory.
 
-    ```
-    $ git clone
-    ```
+   ```
+   $ git clone
+   ```
 
 2. In a separate terminal, start ganache development blockchain on port 7545. Create 10 funded accounts.
 
-    ```
-    Terminal 2:
-    $ ganache-cli -p 7545
-    ```
+   ```
+   Terminal 2:
+   $ ganache-cli -p 7545
+   ```
+
+   OR
+
+   start ganache application (in MacOS)
+
 3. In the first terminal, navigate to the project directory. Test the contract functions via `JavaScript` tests. There are 6 tests, which should pass.
 
-    ```
-    Terminal 1:
-    $ truffle test
-    ```
-3. Migrate and compile the Truffle contract to generate the ABI and deploy the contract to the dev blockchain.
+   ```
+   Terminal 1:
+   $ truffle test
+   ```
 
-    ```
-    $ truffle migrate --reset
-    ```
+4. Migrate and compile the Truffle contract to generate the ABI and deploy the contract to the dev blockchain.
+
+   ```
+   $ truffle migrate --reset
+   ```
 
 5. Make sure `MetaMask` is installed. Open `MetaMask` in your Chrome browser and set the network connection to `Custom RPC` and the target RPC url to `http://127.0.0.1:7545` to access the `ganache-cli` accounts. Only one address is required to test the DApp.
 
-6. Start the front end server on ```localhost:3000``` by using:
+6. Start the front end server on `localhost:3000` by using:
 
-    ```
-    $ npm run dev
-    ```
+   ```
+   $ npm run dev
+   ```
 
 #### Frontend Interaction:
 
@@ -86,21 +97,23 @@ To test the DApp, follow instructions on the `index.html` homepage.
 
 3. Charge or discharge batteries and execute transactions by clicking `Execute Energy Transactions`. This will update battery charge currently filled and determine whether to charge (green) or discharge (red) the battery to the grid. Remaining investment will be updated to reflect the savings/cost of energy transacted.
 
-
-
 ### III. Detailed Usage
 
 #### User roles:
 
 ##### 1) Admin
+
 `admin` users are the only ones allowed to perform crucial functions. The initial account that deploys `VirtualPowerPlant.sol` is the `owner` and the first `admin`, and is able to set up other `admins`. `admins` are responsible for performing two main functions:
+
 - Managing batteries: This consists of adding batteries to the fleet and decommissioning them when necessary.
 - Managing investments: triggering dividends to pay investors, and distributing the dividends into withdrawal pools for investors to withdraw from.
 
 ##### 2) Investors
+
 Investors are composed of any other accounts that want to contribute eth to the fund. Anyone can be an investor, and investors are eligible for dividends that are paid in proportion to the amount of funds invested.
 
 #### Battery-related Assumptions/Calculations:
+
 - A very simple threshold was used to determine whether energy should be purchased or sold, ie if prices were more expensive than the battery's threshold, energy was sold to the grid. Otherwise, energy was purchased.
 
 - The real time energy price was hardcoded to simplify the transaction process. Ideally, it would be connected to an outside Oracle to report the actual, fluctuating real time energy rate.
@@ -112,7 +125,9 @@ Investors are composed of any other accounts that want to contribute eth to the 
 - Decisions on whether to purchase or sell energy were based on a simple threshold. If energy prices are expensive (ie greater than the battery's price threshold), sell energy to the grid to make a profit. Otherwise purchase energy to charge the battery.
 
 #### Relevant Contract Functions:
+
 ##### 1) VirtualPowerPlant.sol
+
 - `isAdmin`: check address is an admin user
 - `setAdmin`: set admin to active or inactive
 - `toggleContractActive`: to implement circuit breaker design
@@ -123,11 +138,13 @@ Investors are composed of any other accounts that want to contribute eth to the 
 - `changeBatteryThreshold`: alter battery threshold characteristics (affects decision making on energy purchases)
 
 **Battery info getter functions:**
+
 - `getRelevantBatteryInfo`
 - `getBatteryChargeRate`
 - `getBatteryMapIndex`
 
 ##### 2) BatteryInvestment.sol
+
 - `updateRemainingInvestment`: update amount of remaining eth in fund
 - `investMoney`: ensure Eth is attached when calling this function
 - `triggerDividend`: admins can implement a dividend to send payment to investors
@@ -135,6 +152,7 @@ Investors are composed of any other accounts that want to contribute eth to the 
 - `getInvestorInvestment`: getter function to retrieve investment amount for particular investor
 
 ##### 3) BatteryEnergy.sol
+
 - `checkBatteryEnergy`: loop over batches of batteries, check transaction circumstances for each. Transact energy as required, update the investment fund with profits/energy purchases.
 - `getRealTimeEnergyPrice`: hardcoded for this demo. Retrieves the current energy rate on the real time market.
 - `energyDecisionAlgorithm`: determines whether to purchase energy or sell it to the grid, based on a simple threshold.
@@ -143,7 +161,7 @@ Investors are composed of any other accounts that want to contribute eth to the 
 
 Contract tests were written in JavaScript
 
-1. Contract Deployment: Check deployment of the parent ```VirtualPowerPlant.sol``` contract, which in turn deploys ```BatteryEnergy.sol``` and ```BatteryInvestment.sol``` contracts.
+1. Contract Deployment: Check deployment of the parent `VirtualPowerPlant.sol` contract, which in turn deploys `BatteryEnergy.sol` and `BatteryInvestment.sol` contracts.
 2. Set admin: Check that a separate admin user can be set.
 3. Investment: Check that users can invest Eth into the battery fund
 4. Add batteries: Check that admin users can add batteries to the battery fleet, and can decommission them too.
@@ -157,6 +175,7 @@ Contract tests were written in JavaScript
 3. [Ownable](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ownership/Ownable.sol): Inherit ownership properties
 
 #### Further
+
 - **[Oraclize](https://docs.oraclize.it/)**: There are two obvious ways to improve this contract implementation -
 
   - Run energy transactions every hour or on a regular time interval. This removes the manual component of transactions.
