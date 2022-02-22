@@ -118,7 +118,7 @@ contract("BatteryInvestment contract test", function (accounts) {
     console.log(vals);
 
     const investment = await batteryInvestmenttest.investMoney({
-      from: investors[3],
+      from: investments[3].investor,
       value: 2500000,
     });
     console.log(investment);
@@ -129,7 +129,7 @@ contract("BatteryInvestment contract test", function (accounts) {
     console.log(vals2);
 
     console.log(await batteryInvestmenttest.investorsList.call(0));
-    console.log(investors);
+    console.log(investments);
 
     const vpp = await VirtualPowerPlant.deployed();
 
