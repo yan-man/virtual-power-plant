@@ -60,10 +60,10 @@ contract("BatteryInvestment contract test", function (accounts) {
 
   // set of test investors, amounts in wei
   const investments = [
-    { investor: accounts[2], amount: 10e12 },
-    { investor: accounts[3], amount: 15e12 },
-    { investor: accounts[4], amount: 5e12 },
-    { investor: accounts[5], amount: 8e12 },
+    { investor: accounts[2], amount: 10e14 },
+    { investor: accounts[3], amount: 15e14 },
+    { investor: accounts[4], amount: 5e14 },
+    { investor: accounts[5], amount: 8e14 },
   ];
 
   beforeEach(async () => {
@@ -163,7 +163,7 @@ contract("BatteryInvestment contract test", function (accounts) {
   });
 
   it("...check BatteryInvestment updateRemainingInvestment", async () => {
-    const updateValueAmount = 45000400;
+    const updateValueAmount = 4.5e12;
     const updateRemainingInvestmentTx =
       await contracts.BatteryInvestment.deployed.updateRemainingInvestment(
         updateValueAmount
@@ -263,7 +263,7 @@ contract("BatteryInvestment contract test", function (accounts) {
     }
   });
 
-  it("...check BatteryInvestment triggerDividend & withdraw", async () => {
+  it("...check BatteryInvestment triggerDividend & addPendingWithdrawals & withdraw", async () => {
     let initialInvestment = (
       await contracts.BatteryInvestment.deployed.remainingInvestment.call()
     ).toNumber();
@@ -312,6 +312,21 @@ contract("BatteryInvestment contract test", function (accounts) {
       "expect totalInvestment matches initial investment pre-dividend"
     );
 
+    if (showConsoleLog) {
+      console.log("totalCurrentDividend: ", totalCurrentDividend);
+      console.log("finalInvestment: ", finalInvestment);
+    }
+  });
+
+  it("...check BatteryInvestment addPendingWithdrawals", async () => {
+    const totalInvestment = (
+      await contracts.BatteryInvestment.deployed.totalInvestment.call()
+    ).toNumber();
+    const totalCurrentDividend = (
+      await contracts.BatteryInvestment.deployed.pendingTotalWithdrawals.call(0)
+    ).toNumber();
+
+    // calculate expected user dividend matches
     const numInvestments = (
       await contracts.BatteryInvestment.deployed.getNumInvestorInvestment.call(
         investments[2].investor
@@ -338,247 +353,42 @@ contract("BatteryInvestment contract test", function (accounts) {
         investments[2].investor
       )
     ).toNumber();
-
     assert.equal(userDividend, expectedUserDividend);
 
+    // invoke addPendingWithdrawals tx
+    await contracts.BatteryInvestment.deployed.addPendingWithdrawals(
+      investments[2].investor
+    );
+
+    const pendingWithdrawal = (
+      await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
+        investments[2].investor
+      )
+    ).toNumber();
+
+    assert.equal(userDividend, pendingWithdrawal);
+
     if (showConsoleLog) {
-      console.log("totalCurrentDividend: ", totalCurrentDividend);
-      console.log("finalInvestment: ", finalInvestment);
       console.log("userDividend: ", userDividend);
+      console.log("pendingWithdrawal: ", pendingWithdrawal);
     }
   });
 
-  // it("3)...check VPP admin", async () => {
-  //   // check deployed main contract
-  //   const virtualPowerPlantOwnerCheck =
-  //     await contracts.VirtualPowerPlant.deployed.owner();
+  it("...check BatteryInvestment withdraw", async () => {
+    // trigger a withdrawal
+    await contracts.BatteryInvestment.deployed.withdraw({
+      from: investments[2].investor,
+    });
+    // pending withdrawal should then be empty
+    const pendingWithdrawal = (
+      await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
+        investments[2].investor
+      )
+    ).toNumber();
+    assert.equal(pendingWithdrawal, 0);
 
-  //   assert.equal(
-  //     contracts.VirtualPowerPlant.owner,
-  //     virtualPowerPlantOwnerCheck,
-  //     "Owner address does not match accounts[0] from ganache"
-  //   );
-
-  //   const virtualPowerPlantAddressCheck =
-  //     contracts.VirtualPowerPlant.deployed.address;
-
-  //   assert.equal(
-  //     contracts.VirtualPowerPlant.address,
-  //     virtualPowerPlantAddressCheck,
-  //     "Owner address does not match accounts[0] from ganache"
-  //   );
-
-  //   // check secondary contracts deployed by VPP
-  //   const batteryInvestmentAddressCheck =
-  //     await contracts.VirtualPowerPlant.deployed.batteryInvestmentAddress.call();
-
-  //   // we've set this manually, so it should match
-  //   assert.equal(
-  //     contracts.BatteryInvestment.address,
-  //     batteryInvestmentAddressCheck,
-  //     "BatteryInvestment contract address incorrect"
-  //   );
-  //   const batteryEnergyAddressCheck =
-  //     await contracts.VirtualPowerPlant.deployed.batteryEnergyAddress.call();
-  //   // we've set this manually, so it should match
-  //   assert.equal(
-  //     contracts.BatteryEnergy.address,
-  //     batteryEnergyAddressCheck,
-  //     "BatteryEnergy contract address incorrect"
-  //   );
-
-  //   if (showConsoleLog) {
-  //     console.log(
-  //       "VirtualPowerPlant owner address: " + virtualPowerPlantOwnerCheck
-  //     );
-  //     console.log(
-  //       "BatteryInvestment contract address: " + batteryInvestmentAddressCheck
-  //     );
-  //     console.log("BatteryEnergy address: " + batteryEnergyAddressCheck);
-  //   }
-  // });
-
-  // it("2)...check contract addresses are correct", async () => {
-  //   // const val = batteryInvestmentAddress.remainingInvestment();
-  //   // const val = await virtualPowerPlant.numBatteries.call().toNumber();
-  //   // console.log(val);
-  //   // const batteryInvestmenttest = await BatteryInvestment.deployed();
-  //   // const vals = (
-  //   //   await batteryInvestmenttest.remainingInvestment.call()
-  //   // ).toNumber();
-  //   // console.log(vals);
-  //   // const investment = await batteryInvestmenttest.investMoney({
-  //   //   from: investor1,
-  //   //   value: 2500000,
-  //   // });
-  //   // console.log(investment);
-  //   // const vals2 = (
-  //   //   await batteryInvestmenttest.remainingInvestment.call()
-  //   // ).toNumber();
-  //   // console.log(vals2);
-  //   // virtualPowerPlantOwnerCheck = await virtualPowerPlant.owner();
-  //   // if (showConsoleLog) {
-  //   //   new Promise(() =>
-  //   //     console.log(
-  //   //       "VirtualPowerPlant owner address: " + virtualPowerPlantOwnerCheck
-  //   //     )
-  //   //   );
-  //   // }
-  //   // assert.equal(
-  //   //   virtualPowerPlantOwner,
-  //   //   virtualPowerPlantOwnerCheck,
-  //   //   "Owner address does not match accounts[0] from ganache"
-  //   // );
-  //   // // check contracts deployed by VPP
-  //   // let batteryInvestmentAddressCheck = await batteryInvestmentContract.address;
-  //   // if (showConsoleLog) {
-  //   //   new Promise(() =>
-  //   //     console.log("BatteryInvestment address: " + batteryInvestmentAddress)
-  //   //   );
-  //   // }
-  //   // assert.equal(
-  //   //   batteryInvestmentAddress,
-  //   //   batteryInvestmentAddressCheck,
-  //   //   "BatteryInvestment contract address incorrect"
-  //   // );
-  //   // let batteryEnergyAddressCheck = await batteryEnergyContract.address;
-  //   // if (showConsoleLog) {
-  //   //   new Promise(() =>
-  //   //     console.log("BatteryEnergy address: " + batteryEnergyAddress)
-  //   //   );
-  //   // }
-  //   // assert.equal(
-  //   //   batteryEnergyAddress,
-  //   //   batteryEnergyAddressCheck,
-  //   //   "BatteryEnergy contract address incorrect"
-  //   // );
-  // });
-
-  // // preliminary tests - check contract deployment
-  // it("1)...check contract addresses are correct", async () => {
-  //   // const val = batteryInvestmentAddress.remainingInvestment();
-  //   // const val = await virtualPowerPlant.numBatteries.call().toNumber();
-  //   // console.log(val);
-
-  //   const batteryInvestmenttest = await BatteryInvestment.deployed();
-
-  //   const vals = (
-  //     await batteryInvestmenttest.remainingInvestment.call()
-  //   ).toNumber();
-  //   console.log(vals);
-
-  //   const investment = await batteryInvestmenttest.investMoney({
-  //     from: investor1,
-  //     value: 2500000,
-  //   });
-  //   console.log(investment);
-
-  //   const vals2 = (
-  //     await batteryInvestmenttest.remainingInvestment.call()
-  //   ).toNumber();
-  //   console.log(vals2);
-
-  //   // virtualPowerPlantOwnerCheck = await virtualPowerPlant.owner();
-  //   // if (showConsoleLog) {
-  //   //   new Promise(() =>
-  //   //     console.log(
-  //   //       "VirtualPowerPlant owner address: " + virtualPowerPlantOwnerCheck
-  //   //     )
-  //   //   );
-  //   // }
-  //   // assert.equal(
-  //   //   virtualPowerPlantOwner,
-  //   //   virtualPowerPlantOwnerCheck,
-  //   //   "Owner address does not match accounts[0] from ganache"
-  //   // );
-  //   // // check contracts deployed by VPP
-  //   // let batteryInvestmentAddressCheck = await batteryInvestmentContract.address;
-  //   // if (showConsoleLog) {
-  //   //   new Promise(() =>
-  //   //     console.log("BatteryInvestment address: " + batteryInvestmentAddress)
-  //   //   );
-  //   // }
-  //   // assert.equal(
-  //   //   batteryInvestmentAddress,
-  //   //   batteryInvestmentAddressCheck,
-  //   //   "BatteryInvestment contract address incorrect"
-  //   // );
-  //   // let batteryEnergyAddressCheck = await batteryEnergyContract.address;
-  //   // if (showConsoleLog) {
-  //   //   new Promise(() =>
-  //   //     console.log("BatteryEnergy address: " + batteryEnergyAddress)
-  //   //   );
-  //   // }
-  //   // assert.equal(
-  //   //   batteryEnergyAddress,
-  //   //   batteryEnergyAddressCheck,
-  //   //   "BatteryEnergy contract address incorrect"
-  //   // );
-  // });
+    if (showConsoleLog) {
+      console.log("pendingWithdrawal: ", pendingWithdrawal);
+    }
+  });
 });
-
-// const deploycon = await VirtualPowerPlant.deployed();
-// const BIaddress = await deploycon.batteryInvestmentAddress.call();
-// const batteryInvestmenttest = await BatteryInvestment.at(BIaddress);
-// const vals = (
-//   await batteryInvestmenttest.remainingInvestment.call()
-// ).toNumber();
-// console.log(vals);
-
-// const investment = await batteryInvestmenttest.investMoney({
-//   from: investments[3].investor,
-//   value: 2500000,
-// });
-// console.log(investment);
-
-// const vals2 = (
-//   await batteryInvestmenttest.remainingInvestment.call()
-// ).toNumber();
-// console.log(vals2);
-
-// console.log(await batteryInvestmenttest.investorsList.call(0));
-// console.log(investments);
-
-// const vpp = await VirtualPowerPlant.deployed();
-
-// await vpp.addBattery(
-//   100,
-//   20,
-//   100000,
-//   "0x7465737400000000000000000000000000000000000000000000000000000000",
-//   1000,
-//   20
-// );
-// console.log((await vpp.numBatteries.call()).toNumber());
-
-// let batt = await vpp.getBattery.call(0);
-// console.log(batt.capacity.toNumber());
-// console.log(batt.currentFilled.toNumber());
-// console.log(batt.dateAdded.toNumber());
-// console.log(batt.cost.toNumber());
-// console.log(batt.serialNumber);
-// console.log(batt.priceThreshold.toNumber());
-// console.log(batt.chargeRate.toNumber());
-// console.log(batt.isActive);
-// console.log(batt.mapIndex.toNumber());
-
-// await vpp.addBattery(
-//   90,
-//   25,
-//   102000,
-//   "0x7465737100000000000000000000000000000000000000000000000000000000",
-//   1200,
-//   22
-// );
-// console.log((await vpp.numBatteries.call()).toNumber());
-
-// batt = await vpp.getBattery.call(1);
-// console.log(batt.capacity.toNumber());
-// console.log(batt.currentFilled.toNumber());
-// console.log(batt.dateAdded.toNumber());
-// console.log(batt.cost.toNumber());
-// console.log(batt.serialNumber);
-// console.log(batt.priceThreshold.toNumber());
-// console.log(batt.chargeRate.toNumber());
-// console.log(batt.isActive);
-// console.log(batt.mapIndex.toNumber());
