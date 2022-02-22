@@ -199,12 +199,13 @@ contract VirtualPowerPlant is Ownable {
     newBatt.mapIndex = batteryID;
 
     batteries.push(newBatt);
-    numBatteries = numBatteries.add(1); // increase number of active batteries
-
-    batteryMapping.push(batteryID); // record battery ID in mapping
 
     uint256 remainingInvestment = batteryInvestmentContract
       .remainingInvestment();
+
+    numBatteries = numBatteries.add(1); // increase number of active batteries
+    batteryMapping.push(batteryID); // record battery ID in mapping
+
     // update remaining investment with cost of battery
     uint256 _newRemainingInvestment = remainingInvestment.sub(_cost);
 

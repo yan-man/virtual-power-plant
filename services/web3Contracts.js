@@ -97,7 +97,7 @@ class web3Contracts {
   async getBatteryInvestmentAddress() {
     try {
       const batteryInvestmentAddress =
-        await this.contracts.VirtualPowerPlanrt.methods
+        await this.contracts.VirtualPowerPlant.methods
           .batteryInvestmentAddress()
           .call();
       // console.log(batteryInvestmentAddress);
