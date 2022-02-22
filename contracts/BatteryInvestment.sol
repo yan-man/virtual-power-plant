@@ -149,7 +149,9 @@ contract BatteryInvestment {
   function withdraw() external payable isValidWithdrawalModifier(msg.sender) {
     uint256 withdrawalAmount = pendingWithdrawals[msg.sender];
     // retrieve dividend amount for particular user
-    pendingTotalWithdrawals[1] -= withdrawalAmount;
+    pendingTotalWithdrawals[1] = pendingTotalWithdrawals[1].sub(
+      withdrawalAmount
+    );
     // Zero the pending refund before
     // sending to prevent re-entrancy attacks
     pendingWithdrawals[msg.sender] = 0;
@@ -159,7 +161,7 @@ contract BatteryInvestment {
     if (numInvestorsWithdraw == investorsList.length) {
       numInvestorsWithdraw = 0;
       pendingTotalWithdrawals[0] = 0;
-      remainingInvestment += pendingTotalWithdrawals[1];
+      remainingInvestment = remainingInvestment.add(pendingTotalWithdrawals[1]);
     }
     msg.sender.transfer(withdrawalAmount);
     emit LogWithdrawalMade(msg.sender, withdrawalAmount);
@@ -245,5 +247,16 @@ contract BatteryInvestment {
     returns (uint256 numInvestments)
   {
     numInvestments = numInvestorInvestments[investorAddress];
+  }
+
+  /// getNumInvestorInvestment
+  /// get how many investments made from that user address
+  /// @param investorAddress investor address
+  function getPendingWithdrawal(address investorAddress)
+    external
+    view
+    returns (uint256 pendingWithdrawal)
+  {
+    pendingWithdrawal = pendingWithdrawals[investorAddress];
   }
 }
