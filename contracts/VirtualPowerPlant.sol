@@ -118,11 +118,6 @@ contract VirtualPowerPlant is Ownable {
     return true;
   }
 
-  function setContractAddress(address _contractAddress) public {
-    batteryInvestmentAddress = _contractAddress;
-    batteryInvestmentContract = BatteryInvestment(batteryInvestmentAddress);
-  }
-
   function getBattery(uint256 index)
     public
     view

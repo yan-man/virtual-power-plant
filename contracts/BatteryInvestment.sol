@@ -1,10 +1,14 @@
 pragma solidity >=0.5.0;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "./VirtualPowerPlant.sol";
 
 /// @author Yan Man
 /// @title Manage energy investments for Virtual Power Plant
 contract BatteryInvestment {
+  using SafeMath for uint256;
+
   // Type declarations
   // Contract which deployed this one
   VirtualPowerPlant internal VirtualPowerPlantContract;
@@ -25,14 +29,16 @@ contract BatteryInvestment {
   // must reset to 0 to allow next dividend cycle to be triggered. Keep track of
   // initial total dividend amount to calculate withdrawal amount for each investor
   // pendingTotalWithdrawals[1]: remaining withdrawal remaining for the dividend period
-  uint256[] public pendingTotalWithdrawals;
+  uint256[2] public pendingTotalWithdrawals;
   uint256 public numInvestorsWithdraw = 0; // keep track of # of investors who have withdrawn during this dividend period
   address[] public investorsList; // list of investors for easier retrieval
+  mapping(address => uint256) public numInvestorInvestments; // to account for how many investments made per investor
   mapping(address => uint256) public pendingWithdrawals; // pending withdrawals for each investor
   mapping(address => Investment[]) public investors; // to account for multiple investments per investor
 
   // Events
   event LogNewInvestment(address investorAddress, uint256 investmentAmount);
+  event LogUser(address add);
   event LogWithdrawalMade(address investorAddress, uint256 withdrawalAmount);
   event LogPendingWithdrawalAdded(
     address investorAddress,
@@ -93,16 +99,17 @@ contract BatteryInvestment {
     VirtualPowerPlantContract = VirtualPowerPlant(_virtualPowerPlantAddress);
     virtualPowerPlantAddress = _virtualPowerPlantAddress;
     // initialize pendingTotalWithdrawals with 0 for initial period
-    pendingTotalWithdrawals.push(0);
-    pendingTotalWithdrawals.push(0);
+    pendingTotalWithdrawals[0] = 0;
+    pendingTotalWithdrawals[1] = 0;
   }
 
   // External functions
-  /// @notice alter remaining investment
+  /// @notice force alter remaining investment (admin override)
   /// @param _remainingInvestment remaining investment value
   /// @return whether var succesfully updated
   function updateRemainingInvestment(uint256 _remainingInvestment)
     external
+    isAdmin(msg.sender)
     returns (bool)
   {
     remainingInvestment = _remainingInvestment;
@@ -126,12 +133,13 @@ contract BatteryInvestment {
         investmentAmount: investAmount
       })
     );
+    numInvestorInvestments[msg.sender] = numInvestorInvestments[msg.sender].add(
+      1
+    );
     // update the total amount of investment
-    totalInvestment += investAmount;
+    totalInvestment = totalInvestment.add(investAmount);
     // update the remaining amount of investment
-    remainingInvestment += investAmount;
-
-    VirtualPowerPlantContract.setContractAddress(address(this));
+    remainingInvestment = remainingInvestment.add(investAmount);
 
     emit LogNewInvestment(msg.sender, investAmount);
   }
@@ -163,18 +171,19 @@ contract BatteryInvestment {
     external
     isAdmin(msg.sender)
     isValidDividendTriggerModifier
-    returns (bool)
+    returns (uint256)
   {
     // dividend to be divided up among investors during this cycle
     // a percentage of the remaining investment
-    uint256 totalCurrentDividend = (remainingInvestment * dividendPercentage) /
-      (100);
-    // zero out value first
-    remainingInvestment -= totalCurrentDividend;
+    uint256 totalCurrentDividend = remainingInvestment.mul(dividendPercentage);
+    totalCurrentDividend = totalCurrentDividend.div(100);
+    // // zero out value first
+    remainingInvestment = remainingInvestment.sub(totalCurrentDividend);
     // set both values in the pendingTotalWithdrawals array
-    pendingTotalWithdrawals[0] = (totalCurrentDividend);
-    pendingTotalWithdrawals[1] = (totalCurrentDividend);
-    return true;
+    // for the amt to be withdrawn and total left
+    pendingTotalWithdrawals[0] = totalCurrentDividend;
+    pendingTotalWithdrawals[1] = totalCurrentDividend;
+    return totalCurrentDividend;
   }
 
   /// @notice add withdrawals, transfer from outstanding dividend to each
@@ -192,13 +201,19 @@ contract BatteryInvestment {
       // require each investment was made by this investor
       require(investors[currentAddress][i].investorAddress == currentAddress);
       // sum up all investments made by current investor
-      totalCurrentInvestorAmt += investors[currentAddress][i].investmentAmount;
+      totalCurrentInvestorAmt = totalCurrentInvestorAmt.add(
+        investors[currentAddress][i].investmentAmount
+      );
     }
     // calculate dividend based on ratio of investments made to the total fund
-    uint256 totalUserDividend = (pendingTotalWithdrawals[0] *
-      totalCurrentInvestorAmt) / (totalInvestment);
+    uint256 totalUserDividend = totalCurrentInvestorAmt.mul(
+      pendingTotalWithdrawals[0]
+    );
+    totalUserDividend = totalUserDividend.div(totalInvestment);
     // add new dividend to what remains in investor's withdrawal pool
-    pendingWithdrawals[currentAddress] += totalUserDividend;
+    pendingWithdrawals[currentAddress] = pendingWithdrawals[currentAddress].add(
+      totalUserDividend
+    );
     emit LogPendingWithdrawalAdded(
       currentAddress,
       pendingWithdrawals[currentAddress]
@@ -207,6 +222,8 @@ contract BatteryInvestment {
   }
 
   // External functions that are view
+
+  /// getInvestorInvestment
   /// @notice retrieve investment amount for a particular investment, because
   /// @notice multiple are available per user, submit index too
   /// @param investorAddress investor address
@@ -217,5 +234,16 @@ contract BatteryInvestment {
     returns (uint256 returnInvestment)
   {
     returnInvestment = investors[investorAddress][index].investmentAmount;
+  }
+
+  /// getNumInvestorInvestment
+  /// get how many investments made from that user address
+  /// @param investorAddress investor address
+  function getNumInvestorInvestment(address investorAddress)
+    external
+    view
+    returns (uint256 numInvestments)
+  {
+    numInvestments = numInvestorInvestments[investorAddress];
   }
 }
