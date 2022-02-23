@@ -2,36 +2,43 @@ import React, { Component } from "react";
 import Row from "react-bootstrap/Row";
 import Container from "react-bootstrap/Container";
 import Col from "react-bootstrap/Col";
-import web3Contracts from "../services/web3Contracts";
+import web3Contracts from "../api/web3Contracts";
+
+import batteryInfo from "../api/batteries";
 
 import ExistingBatteryCarousel from "./ExistingBatteryCarousel";
+import BatteryCarousel from "./BatteryCarousel";
 class VirtualPowerPlantInstructions extends Component {
   state = {
     value: 0.0,
-    totalInvestment: 0,
-    remainingInvestment: 0,
-    numBatteries: 0,
+    info: {
+      totalInvestment: 0,
+      remainingInvestment: 0,
+      numBatteries: 0,
+    },
     batteryList: {},
     currentUserAddress: "",
+    Web3Contracts: {},
   };
-  Web3Contracts = {};
   timerID;
   componentDidMount = async () => {
-    console.log("use effect; init web3");
-    // this.timerID = setInterval(() => this.tick(), 1000);
+    console.log("componentDidMount; init web3");
+    this.timerID = setInterval(() => this.tick(), 3000);
 
-    this.Web3Contracts = new web3Contracts();
-    await this.Web3Contracts.init();
-    // console.log(this.Web3Contracts);
-    // await this.updateStats();
+    const Web3Contracts = new web3Contracts();
+    await Web3Contracts.init();
+    this.setState({
+      Web3Contracts,
+      currentUserAddress: Web3Contracts.accounts[0],
+    });
   };
   componentWillUnmount() {
     clearInterval(this.timerID);
   }
   async tick() {
-    console.log("tick");
+    // console.log("tick");
     // this.updateBatteryList();
-    // this.updateStats();
+    this.updateStats();
   }
 
   updateBatteryList = async () => {
@@ -70,78 +77,100 @@ class VirtualPowerPlantInstructions extends Component {
   };
 
   updateStats = async () => {
-    if (this.Web3Contracts.contracts) {
+    console.log("updateStats");
+    const { Web3Contracts } = this.state;
+    if (Web3Contracts.contracts) {
       let totalInvestment =
-        await this.Web3Contracts.contracts.BatteryInvestment.methods
-          .totalInvestment()
-          .call();
-      totalInvestment = this.Web3Contracts.web3.utils.fromWei(
+        await Web3Contracts.contracts.BatteryInvestment.deployed.totalInvestment();
+      totalInvestment = Web3Contracts.web3.utils.fromWei(
         totalInvestment,
         "ether"
       );
-
       let remainingInvestment =
-        await this.Web3Contracts.contracts.BatteryInvestment.methods
-          .remainingInvestment()
-          .call();
-      remainingInvestment = this.Web3Contracts.web3.utils.fromWei(
+        await Web3Contracts.contracts.BatteryInvestment.deployed.remainingInvestment();
+      remainingInvestment = Web3Contracts.web3.utils.fromWei(
         remainingInvestment,
         "ether"
       );
-
-      //       let test = await this.Web3Contracts.contracts.VirtualPowerPlant.methods
-      //           .batteryInvestmentAddress()
-      //           .call();
-      //           console.log(test);
-      //  let test2 = await this.Web3Contracts.contracts.VirtualPowerPlant.methods
-      //           .batteryInvestmentContract()
-      //           .call();
-      //           console.log(test2);
-
-      // console.log(this.Web3Contracts.contracts.BatteryInvestment.options.address)
-
-      let numBatteries =
-        await this.Web3Contracts.contracts.VirtualPowerPlant.methods
-          .numBatteries()
-          .call();
-      this.setState({ totalInvestment, remainingInvestment, numBatteries });
+      let numBatteries = (
+        await Web3Contracts.contracts.VirtualPowerPlant.deployed.numBatteries()
+      ).toNumber();
+      this.setState({
+        info: { totalInvestment, remainingInvestment, numBatteries },
+      });
     }
   };
   handleSubmit = async (event) => {
     event.preventDefault();
-    await this.Web3Contracts.invest(String(this.state.value));
-    await this.updateStats();
+    await this.state.Web3Contracts.invest(String(this.state.value));
+    // await this.updateStats();
   };
   handleChange = (event) => {
     this.setState({ value: event.target.value });
   };
   render() {
-    // console.log(this.Web3Contracts);
+    const { Web3Contracts, currentUserAddress, info } = this.state;
     return (
       <React.Fragment>
         <Row>
-          <h4>Current User: {this.state.currentUserAddress}</h4>
+          <p>
+            My Address:{" "}
+            <span id="owner">
+              {Web3Contracts.accounts ? Web3Contracts.accounts[0] : ""}
+            </span>
+          </p>
         </Row>
+        <Row>
+          <Col>
+            <p>
+              Virtual Power Plant Contract Addres:{" "}
+              <span id="virtualPowerPlantContract">
+                {Web3Contracts.contracts
+                  ? Web3Contracts.contracts.VirtualPowerPlant.address
+                  : ""}
+              </span>
+            </p>
+          </Col>
+          <Col>
+            <p>
+              Battery Investment Contract Addres:{" "}
+              <span id="batteryInvestment">
+                {Web3Contracts.contracts
+                  ? Web3Contracts.contracts.BatteryInvestment.address
+                  : ""}
+              </span>
+            </p>
+          </Col>
+          <Col>
+            <p>
+              Battery Energy Contract Addres:{" "}
+              <span id="batteryEnergy">
+                {Web3Contracts.contracts
+                  ? Web3Contracts.contracts.BatteryEnergy.address
+                  : ""}
+              </span>
+            </p>
+          </Col>
+        </Row>
+        <hr></hr>
         <Row>
           <Col>
             <h5>Total Amount Invested:</h5>
             <h4>
-              <span id="totalInvestment">{this.state.totalInvestment}</span> Eth
+              <span id="totalInvestment">{info.totalInvestment}</span> Eth
             </h4>
           </Col>
           <Col>
             <h5>Remaining Amount Left:</h5>
             <h4>
-              <span id="remainingInvestment">
-                {this.state.remainingInvestment}
-              </span>{" "}
+              <span id="remainingInvestment">{info.remainingInvestment}</span>{" "}
               Eth
             </h4>
           </Col>
           <Col>
             <h5>Number of Batteries:</h5>
             <h4>
-              <span id="numBatteries">{this.state.numBatteries}</span>
+              <span id="numBatteries">{info.numBatteries}</span>
             </h4>
           </Col>
         </Row>
@@ -156,23 +185,21 @@ class VirtualPowerPlantInstructions extends Component {
           </p>
         </Row>
         <Row>
-          <form onSubmit={this.handleSubmit}>
-            <div>
-              <button
-                className="btn-invest"
-                type="button"
-                onClick={this.handleSubmit}
-              >
-                Invest
-              </button>
-              <input
-                onChange={this.handleChange}
-                className="investmentAmount"
-                placeholder="[Eth]"
-                value={this.state.value}
-              ></input>
-            </div>
-          </form>
+          <div>
+            <button
+              className="btn-invest"
+              type="button"
+              onClick={this.handleSubmit}
+            >
+              Invest
+            </button>
+            <input
+              onChange={this.handleChange}
+              className="investmentAmount"
+              placeholder="[Eth]"
+              value={this.state.value}
+            ></input>
+          </div>
         </Row>
         <Row>
           <h3>Step 2:</h3>
@@ -181,32 +208,10 @@ class VirtualPowerPlantInstructions extends Component {
             the account of the user who has deployed the contract (probably
             accounts[0]) to maintain admin permissions (Click "Add to array")
           </p>
-          <p>
-            Virtual Power Plant Admin:{" "}
-            <span id="owner">
-              {this.Web3Contracts.accounts
-                ? this.Web3Contracts.accounts[0]
-                : ""}
-            </span>
-          </p>
-          <p>
-            Virtual Power Plant Contract:{" "}
-            <span id="virtualPowerPlantContract">
-              {this.Web3Contracts.contracts
-                ? this.Web3Contracts.contracts.VirtualPowerPlant.options.address
-                : ""}
-            </span>
-          </p>
-          <p>
-            Battery Investment Contract:{" "}
-            <span id="batteryInvestment">
-              {this.Web3Contracts.contracts
-                ? this.Web3Contracts.contracts.BatteryInvestment.options.address
-                : ""}
-            </span>
-          </p>
         </Row>
-        <Row>{/* <ExistingBatteryCarousel batteries={batteryInfo} /> */}</Row>
+        <Row>
+          <BatteryCarousel batteries={batteryInfo} />
+        </Row>
         <Row>
           <div id="batteryRow" className="row"></div>
           <h3>Step 3:</h3>

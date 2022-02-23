@@ -5,10 +5,10 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import styles from "../styles/Home.module.css";
 import batteries from "./api/batteries";
-import VirtualPowerPlantInstructions from "../components/VirtualPowerPlantInstructions";
-import Title from "../components/Title";
-import batteryInfo from "./api/batteries";
-import BatteryCarousel from "../components/BatteryCarousel";
+import VirtualPowerPlantInstructions from "./components/VirtualPowerPlantInstructions";
+import Title from "./components/Title";
+// import batteryInfo from "./api/batteries";
+// import BatteryCarousel from "../components/BatteryCarousel";
 // import web3Contracts from "../services/web3Contracts";
 
 function Home({ Web3Contracts }) {
@@ -32,7 +32,6 @@ function Home({ Web3Contracts }) {
             <Title />
           </Row>
           <VirtualPowerPlantInstructions />
-          <BatteryCarousel batteries={batteryInfo} />
         </Container>
       </main>
 

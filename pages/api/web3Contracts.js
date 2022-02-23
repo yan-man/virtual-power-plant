@@ -47,9 +47,9 @@ class web3Contracts {
   }
 
   async initContractTruffle() {
-    const VirtualPowerPlant = require("../build/contracts/VirtualPowerPlant.json");
-    const BatteryEnergy = require("../build/contracts/BatteryEnergy.json");
-    const BatteryInvestment = require("../build/contracts/BatteryInvestment.json");
+    const VirtualPowerPlant = require("../../build/contracts/VirtualPowerPlant.json");
+    const BatteryEnergy = require("../../build/contracts/BatteryEnergy.json");
+    const BatteryInvestment = require("../../build/contracts/BatteryInvestment.json");
 
     this.contracts.VirtualPowerPlant = {
       contract: contract(VirtualPowerPlant),
@@ -65,6 +65,8 @@ class web3Contracts {
 
     this.contracts.VirtualPowerPlant.deployed =
       await this.contracts.VirtualPowerPlant.contract.deployed();
+    this.contracts.VirtualPowerPlant.address =
+      await this.contracts.VirtualPowerPlant.deployed.virtualPowerPlantAddress();
 
     this.contracts.BatteryInvestment.address =
       await this.contracts.VirtualPowerPlant.deployed.batteryInvestmentAddress();
@@ -80,64 +82,17 @@ class web3Contracts {
       await this.contracts.BatteryEnergy.contract.at(
         this.contracts.BatteryEnergy.address
       );
-
-    console.log(this.contracts);
-  }
-
-  async initContract() {
-    const batteryInvestment = require("../build/contracts/BatteryInvestment.json");
-    const batteryEnergy = require("../build/contracts/BatteryEnergy.json");
-    const virtualPowerPlant = require("../build/contracts/VirtualPowerPlant.json");
-
-    const netid = await this.web3.eth.net.getId();
-
-    this.contracts.VirtualPowerPlant = new this.web3.eth.Contract(
-      virtualPowerPlant.abi,
-      virtualPowerPlant.networks[netid].address
-    );
-
-    const batteryInvestmentAddress =
-      await this.contracts.VirtualPowerPlant.methods
-        .batteryInvestmentAddress()
-        .call();
-
-    const batteryEnergyAddress = await this.contracts.VirtualPowerPlant.methods
-      .batteryEnergyAddress()
-      .call();
-
-    this.contracts.BatteryInvestment = new this.web3.eth.Contract(
-      batteryInvestment.abi,
-      batteryInvestmentAddress
-    );
-
-    this.contracts.BatteryEnergy = new this.web3.eth.Contract(
-      batteryEnergy.abi,
-      batteryEnergyAddress
-    );
-
-    // console.log(this.accounts[0]);
-    await this.contracts.BatteryInvestment.methods.investMoney().send({
-      from: this.accounts[0],
-      value: this.web3.utils.toWei("0.2", "ether"),
-    });
-
-    // console.log(asdf);
-    // const yan = await this.contracts.VirtualPowerPlant.methods
-    //   .getAdmin()
-    //   .call();
-
-    // const batchProcess = await this.contracts.BatteryEnergy.methods
-    //   .batchProcess()
-    //   .call();
-
-    // console.log(batchProcess);
   }
 
   async invest(amount) {
-    await this.contracts.BatteryInvestment.methods.investMoney({
-      from: this.accounts[0],
-      value: this.web3.utils.toWei(amount, "ether"),
-    });
+    try {
+      await this.contracts.BatteryInvestment.deployed.investMoney({
+        from: this.accounts[0],
+        value: this.web3.utils.toWei(amount, "ether"),
+      });
+    } catch (e) {
+      console.log("error", e);
+    }
   }
 
   async addBattery(battery) {

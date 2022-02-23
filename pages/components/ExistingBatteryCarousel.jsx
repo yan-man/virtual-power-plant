@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import Carousel from "react-bootstrap/Carousel";
 import Row from "react-bootstrap/Row";
 import Image from "next/image";
-import styles from "../styles/BatteryCarousel.module.css";
+import styles from "../../styles/BatteryCarousel.module.css";
 
-import web3Contracts from "../services/web3Contracts";
+import web3Contracts from "../api/web3Contracts";
 class BatteryCarousel extends React.Component {
   render() {
     return (
