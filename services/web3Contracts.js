@@ -38,7 +38,7 @@ class web3Contracts {
     this.web3Provider = web3Provider;
     this.web3 = new Web3(web3Provider);
 
-    // await this.initAccounts();
+    await this.initAccounts();
     await this.initContract();
   }
 
@@ -76,6 +76,12 @@ class web3Contracts {
       batteryEnergy.abi,
       batteryEnergyAddress
     );
+
+    // console.log(this.accounts[0]);
+    await this.contracts.BatteryInvestment.methods.investMoney().send({
+      from: this.accounts[0],
+      value: this.web3.utils.toWei("0.2", "ether"),
+    });
 
     // console.log(asdf);
     // const yan = await this.contracts.VirtualPowerPlant.methods
