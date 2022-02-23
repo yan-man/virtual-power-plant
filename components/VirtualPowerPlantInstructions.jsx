@@ -12,23 +12,26 @@ class VirtualPowerPlantInstructions extends Component {
     remainingInvestment: 0,
     numBatteries: 0,
     batteryList: {},
+    currentUserAddress: "",
   };
   Web3Contracts = {};
   timerID;
   componentDidMount = async () => {
     console.log("use effect; init web3");
-    this.timerID = setInterval(() => this.tick(), 1000);
+    // this.timerID = setInterval(() => this.tick(), 1000);
 
     this.Web3Contracts = new web3Contracts();
     await this.Web3Contracts.init();
-    await this.updateStats();
+    // console.log(this.Web3Contracts);
+    // await this.updateStats();
   };
   componentWillUnmount() {
     clearInterval(this.timerID);
   }
   async tick() {
-    this.updateBatteryList();
-    this.updateStats();
+    console.log("tick");
+    // this.updateBatteryList();
+    // this.updateStats();
   }
 
   updateBatteryList = async () => {
@@ -61,9 +64,9 @@ class VirtualPowerPlantInstructions extends Component {
       // this.setState({batteryList: batteryList})
     }
 
-//     promiseB = promiseA.then(function(result) {
-//   return result + 1;
-// });
+    //     promiseB = promiseA.then(function(result) {
+    //   return result + 1;
+    // });
   };
 
   updateStats = async () => {
@@ -116,6 +119,9 @@ class VirtualPowerPlantInstructions extends Component {
     // console.log(this.Web3Contracts);
     return (
       <React.Fragment>
+        <Row>
+          <h4>Current User: {this.state.currentUserAddress}</h4>
+        </Row>
         <Row>
           <Col>
             <h5>Total Amount Invested:</h5>

@@ -8,14 +8,14 @@ import web3Contracts from "../services/web3Contracts";
 class BatteryCarousel extends React.Component {
   Web3Contracts = {};
   componentDidMount = async () => {
-    console.log("use effect; init web3");
-    this.Web3Contracts = new web3Contracts();
-    await this.Web3Contracts.init();
+    // console.log("use effect; init web3");
+    // this.Web3Contracts = new web3Contracts();
+    // await this.Web3Contracts.init();
   };
   handleAddBattery = async (event) => {
     // console.log(this.Web3Contracts);
     // console.log(event)
-    this.Web3Contracts.addBattery(event);
+    // this.Web3Contracts.addBattery(event);
   };
   render() {
     return (
@@ -26,7 +26,7 @@ class BatteryCarousel extends React.Component {
               return (
                 <Carousel.Item key={ind}>
                   <img
-                    className="d-block w-50"
+                    className="d-block w-25"
                     src="noun_Battery_1582411.png"
                     alt="Second slide"
                   />
@@ -42,7 +42,9 @@ class BatteryCarousel extends React.Component {
                       type="button"
                       data-id="0"
                       value={battery}
-                      onClick={() => {this.handleAddBattery(battery)}}
+                      onClick={() => {
+                        this.handleAddBattery(battery);
+                      }}
                     >
                       Add to array
                     </button>
