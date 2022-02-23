@@ -333,61 +333,57 @@ contract("BatteryInvestment contract test", function (accounts) {
     }
   });
 
-  // it("...check BatteryInvestment addPendingWithdrawals", async () => {
-  //   const totalInvestment = (
-  //     await contracts.BatteryInvestment.deployed.totalInvestment.call()
-  //   );
-  //   const totalCurrentDividend = (
-  //     await contracts.BatteryInvestment.deployed.pendingTotalWithdrawals.call(0)
-  //   );
+  it("...check BatteryInvestment addPendingWithdrawals", async () => {
+    const totalInvestment =
+      await contracts.BatteryInvestment.deployed.totalInvestment.call();
+    const totalCurrentDividend =
+      await contracts.BatteryInvestment.deployed.pendingTotalWithdrawals.call(
+        0
+      );
 
-  //   // calculate expected user dividend matches
-  //   const numInvestments = (
-  //     await contracts.BatteryInvestment.deployed.getNumInvestorInvestment.call(
-  //       investments[2].investor
-  //     )
-  //   );
+    // calculate expected user dividend matches
+    const numInvestments =
+      await contracts.BatteryInvestment.deployed.getNumInvestorInvestment.call(
+        investments[2].investor
+      );
 
-  //   userTotalInvested = 0;
-  //   for (let ind = 0; ind < numInvestments; ind++) {
-  //     let tempInvestment = (
-  //       await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
-  //         investments[2].investor,
-  //         ind
-  //       )
-  //     );
-  //     userTotalInvested = userTotalInvested + tempInvestment;
-  //   }
+    userTotalInvested = new web3.utils.BN(0);
+    for (let ind = 0; ind < numInvestments; ind++) {
+      let tempInvestment =
+        await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
+          investments[2].investor,
+          ind
+        );
+      userTotalInvested = userTotalInvested.add(tempInvestment);
+    }
 
-  //   const expectedDividendPercentage = userTotalInvested / totalInvestment;
-  //   const expectedUserDividend =
-  //     expectedDividendPercentage * totalCurrentDividend;
+    const expectedUserDividend = userTotalInvested
+      .mul(totalCurrentDividend)
+      .div(totalInvestment);
 
-  //   const userDividend = (
-  //     await contracts.BatteryInvestment.deployed.addPendingWithdrawals.call(
-  //       investments[2].investor
-  //     )
-  //   ).toNumber();
-  //   assert.equal(userDividend, expectedUserDividend);
+    const userDividend =
+      await contracts.BatteryInvestment.deployed.addPendingWithdrawals.call(
+        investments[2].investor
+      );
+    assert.equal(userDividend.toString(), expectedUserDividend.toString());
 
-  //   // invoke addPendingWithdrawals tx
-  //   await contracts.BatteryInvestment.deployed.addPendingWithdrawals(
-  //     investments[2].investor
-  //   );
+    // invoke addPendingWithdrawals tx
+    await contracts.BatteryInvestment.deployed.addPendingWithdrawals(
+      investments[2].investor
+    );
 
-  //   const pendingWithdrawal = (
-  //     await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
-  //       investments[2].investor
-  //     )
-  //   ).toNumber();
+    const pendingWithdrawal =
+      await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
+        investments[2].investor
+      );
 
-  //   assert.equal(userDividend, pendingWithdrawal);
+    assert.equal(userDividend.toString(), pendingWithdrawal.toString());
 
-  //   if (showConsoleLog) {
-  //     console.log("userDividend: ", userDividend);
-  //     console.log("pendingWithdrawal: ", pendingWithdrawal);
-  //   }
-  // });
+    if (showConsoleLog) {
+      console.log("userDividend: ", userDividend.toString());
+      console.log("pendingWithdrawal: ", pendingWithdrawal.toString());
+    }
+  });
 
   // it("...check BatteryInvestment withdraw", async () => {
   //   let balance1 = await web3.eth.getBalance(investments[2].investor);
