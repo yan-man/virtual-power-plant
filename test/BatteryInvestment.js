@@ -240,40 +240,43 @@ contract("BatteryInvestment contract test", function (accounts) {
       expectedTotalInvested.toString()
     );
 
-    // // for one of the investors, create a second investment
-    // // check that indexed investorList is working properly
-    // const secondInvestmentAmount = investments[2].amount * 2;
-    // let investMoneyTx = await contracts.BatteryInvestment.deployed.investMoney({
-    //   from: investments[2].investor,
-    //   value: secondInvestmentAmount,
-    // });
-    // // expecting tx obj returned
-    // assert.equal(typeof investMoneyTx, "object");
-    // let getSecondInvestment = (
-    //   await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
-    //     investments[2].investor,
-    //     1
-    //   )
-    // ).toNumber();
-    // assert.equal(secondInvestmentAmount, getSecondInvestment);
+    // for one of the investors, create a second investment
+    // check that indexed investorList is working properly
+    const secondInvestmentAmount = investments[2].amount * 2;
+    let investMoneyTx = await contracts.BatteryInvestment.deployed.investMoney({
+      from: investments[2].investor,
+      value: secondInvestmentAmount,
+    });
+    // expecting tx obj returned
+    assert.equal(typeof investMoneyTx, "object");
+    let getSecondInvestment =
+      await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
+        investments[2].investor,
+        1
+      );
+    assert.equal(secondInvestmentAmount, getSecondInvestment);
 
-    // // check remainingInvestment again
-    // expectedTotalInvested = expectedTotalInvested + secondInvestmentAmount;
-    // remainingInvestment = (
-    //   await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    // ).toNumber();
-    // assert.equal(remainingInvestment, expectedTotalInvested);
+    // check remainingInvestment again
+    expectedTotalInvested = expectedTotalInvested.add(
+      new web3.utils.BN(secondInvestmentAmount)
+    );
+    remainingInvestment =
+      await contracts.BatteryInvestment.deployed.remainingInvestment.call();
+    assert.equal(
+      remainingInvestment.toString(),
+      expectedTotalInvested.toString()
+    );
 
-    // if (showConsoleLog) {
-    //   console.log("remainingInvestment: ", remainingInvestment);
-    //   console.log("investorList: ", investorList);
-    //   console.log(
-    //     "second investment from ",
-    //     investments[2].investor,
-    //     ": ",
-    //     getSecondInvestment
-    //   );
-    // }
+    if (showConsoleLog) {
+      console.log("remainingInvestment: ", remainingInvestment.toString());
+      console.log("investorList: ", investorList);
+      console.log(
+        "second investment from ",
+        investments[2].investor,
+        ": ",
+        getSecondInvestment.toString()
+      );
+    }
   });
 
   // it("...check BatteryInvestment triggerDividend & addPendingWithdrawals & withdraw", async () => {
