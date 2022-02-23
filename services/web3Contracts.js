@@ -34,16 +34,24 @@ class web3Contracts {
       web3Provider = new Web3.providers.HttpProvider("http://localhost:7545");
     }
 
-    // web3Provider = new Web3.providers.HttpProvider("http://localhost:7545");
     this.web3Provider = web3Provider;
     this.web3 = new Web3(web3Provider);
 
     await this.initAccounts();
-    await this.initContract();
+    await this.initContractTruffle();
   }
 
   async initAccounts() {
     this.accounts = await this.web3.eth.getAccounts();
+  }
+
+  async initContractTruffle() {
+    const VirtualPowerPlantArtifact = require("../build/contracts/VirtualPowerPlant.json");
+    const vppcontract = contract(VirtualPowerPlantArtifact);
+    vppcontract.setProvider(this.web3Provider);
+
+    const deployed = await vppcontract.deployed();
+    console.log(await deployed.batteryInvestmentAddress());
   }
 
   async initContract() {
