@@ -1,3 +1,7 @@
 .carousel {
-  background: gray;
+  background: darkgray;
+}
+
+.carousel-active {
+  background: green;
 }
