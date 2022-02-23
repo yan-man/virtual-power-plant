@@ -11,13 +11,14 @@ import BatteryCarousel from "./BatteryCarousel";
 class VirtualPowerPlantInstructions extends Component {
   state = {
     value: 0.0,
+    myAddress: "",
+    myBalance: 0,
     info: {
       totalInvestment: 0,
       remainingInvestment: 0,
       numBatteries: 0,
     },
     batteryList: {},
-    currentUserAddress: "",
     Web3Contracts: {},
   };
   timerID;
@@ -29,7 +30,7 @@ class VirtualPowerPlantInstructions extends Component {
     await Web3Contracts.init();
     this.setState({
       Web3Contracts,
-      currentUserAddress: Web3Contracts.accounts[0],
+      myAddress: Web3Contracts.accounts[0],
     });
   };
   componentWillUnmount() {
@@ -95,8 +96,21 @@ class VirtualPowerPlantInstructions extends Component {
       let numBatteries = (
         await Web3Contracts.contracts.VirtualPowerPlant.deployed.numBatteries()
       ).toNumber();
+
+      let myBalance = await Web3Contracts.web3.eth.getBalance(
+        this.state.myAddress
+      );
+
+      console.log(
+        await Web3Contracts.web3.eth.getBalance(
+          Web3Contracts.contracts.BatteryInvestment.address
+        )
+      );
+
+      myBalance = Web3Contracts.web3.utils.fromWei(myBalance, "ether");
       this.setState({
         info: { totalInvestment, remainingInvestment, numBatteries },
+        myBalance,
       });
     }
   };
@@ -109,21 +123,23 @@ class VirtualPowerPlantInstructions extends Component {
     this.setState({ value: event.target.value });
   };
   render() {
-    const { Web3Contracts, currentUserAddress, info } = this.state;
+    const { Web3Contracts, myBalance, myAddress, info } = this.state;
     return (
       <React.Fragment>
         <Row>
           <p>
-            My Address:{" "}
-            <span id="owner">
-              {Web3Contracts.accounts ? Web3Contracts.accounts[0] : ""}
-            </span>
+            My Address: <span id="owner">{myAddress}</span>
+          </p>
+        </Row>
+        <Row>
+          <p>
+            My Balance: <span id="">{myBalance} eth</span>
           </p>
         </Row>
         <Row>
           <Col>
             <p>
-              Virtual Power Plant Contract Addres:{" "}
+              Virtual Power Plant Contract Address:{" "}
               <span id="virtualPowerPlantContract">
                 {Web3Contracts.contracts
                   ? Web3Contracts.contracts.VirtualPowerPlant.address
@@ -133,7 +149,7 @@ class VirtualPowerPlantInstructions extends Component {
           </Col>
           <Col>
             <p>
-              Battery Investment Contract Addres:{" "}
+              Battery Investment Contract Address:{" "}
               <span id="batteryInvestment">
                 {Web3Contracts.contracts
                   ? Web3Contracts.contracts.BatteryInvestment.address
@@ -143,7 +159,7 @@ class VirtualPowerPlantInstructions extends Component {
           </Col>
           <Col>
             <p>
-              Battery Energy Contract Addres:{" "}
+              Battery Energy Contract Address:{" "}
               <span id="batteryEnergy">
                 {Web3Contracts.contracts
                   ? Web3Contracts.contracts.BatteryEnergy.address
@@ -157,14 +173,14 @@ class VirtualPowerPlantInstructions extends Component {
           <Col>
             <h5>Total Amount Invested:</h5>
             <h4>
-              <span id="totalInvestment">{info.totalInvestment}</span> Eth
+              <span id="totalInvestment">{info.totalInvestment}</span> eth
             </h4>
           </Col>
           <Col>
             <h5>Remaining Amount Left:</h5>
             <h4>
               <span id="remainingInvestment">{info.remainingInvestment}</span>{" "}
-              Eth
+              eth
             </h4>
           </Col>
           <Col>
