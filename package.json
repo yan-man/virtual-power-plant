@@ -1,6 +1,13 @@
 {
-  "name": "vpp-new",
-  "private": true,
+  "name": "virtual-power-plant",
+  "version": "0.2.0",
+  "author": "Yan Man",
+  "keywords": [],
+  "description": "demo dApp implementation of VPP",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
