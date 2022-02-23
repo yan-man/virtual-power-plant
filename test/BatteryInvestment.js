@@ -1,9 +1,8 @@
 const VirtualPowerPlant = artifacts.require("VirtualPowerPlant");
 const BatteryInvestment = artifacts.require("BatteryInvestment");
 const BatteryEnergy = artifacts.require("BatteryEnergy");
-
 // set to true to log detailed test results
-const showConsoleLog = false;
+const showConsoleLog = true;
 
 //  @title Test functionality for VirtualPowerPlant contract & 2 other deployed contracts
 //  @author Yan Man
@@ -140,25 +139,38 @@ contract("BatteryInvestment contract test", function (accounts) {
   it("...check BatteryInvestment public vars are set properly", async () => {
     // secondary deployed contracts' initialized public vars should be accessible
     // just need to be called bc its just the getter, not a tx
-    const investmentPercentage = (
-      await contracts.BatteryInvestment.deployed.investmentPercentage.call()
-    ).toNumber();
-    const numInvestorsWithdraw = (
-      await contracts.BatteryInvestment.deployed.numInvestorsWithdraw.call()
-    ).toNumber();
+    const investmentPercentage =
+      await contracts.BatteryInvestment.deployed.investmentPercentage.call();
+    const numInvestorsWithdraw =
+      await contracts.BatteryInvestment.deployed.numInvestorsWithdraw.call();
     // set from vpp contract
-    const dividendPercentage = (
-      await contracts.BatteryInvestment.deployed.dividendPercentage.call()
-    ).toNumber();
+    const dividendPercentage =
+      await contracts.BatteryInvestment.deployed.dividendPercentage.call();
 
-    assert.equal(investmentPercentage, 3, "investmentPercentage incorrect");
-    assert.equal(numInvestorsWithdraw, 0, "numInvestorsWithdraw incorrect");
-    assert.equal(dividendPercentage, 1, "dividendPercentage incorrect");
+    const expectedInvestmentPercentage = 3;
+    const expectedNumInvestorsWithdraw = 0;
+    const expectedDividendPercentage = 1;
+
+    assert.equal(
+      investmentPercentage,
+      expectedInvestmentPercentage,
+      "investmentPercentage incorrect"
+    );
+    assert.equal(
+      numInvestorsWithdraw,
+      expectedNumInvestorsWithdraw,
+      "numInvestorsWithdraw incorrect"
+    );
+    assert.equal(
+      dividendPercentage,
+      expectedDividendPercentage,
+      "dividendPercentage incorrect"
+    );
 
     if (showConsoleLog) {
-      console.log("investmentPercentage: ", investmentPercentage);
-      console.log("numInvestorsWithdraw: ", numInvestorsWithdraw);
-      console.log("dividendPercentage: ", dividendPercentage);
+      console.log("investmentPercentage: ", investmentPercentage.toString());
+      console.log("numInvestorsWithdraw: ", numInvestorsWithdraw.toString());
+      console.log("dividendPercentage: ", dividendPercentage.toString());
     }
   });
 
@@ -172,15 +184,14 @@ contract("BatteryInvestment contract test", function (accounts) {
     // expecting tx obj returned
     assert.equal(typeof updateRemainingInvestmentTx, "object");
 
-    const remainingInvestment = (
-      await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    ).toNumber();
+    const remainingInvestment =
+      await contracts.BatteryInvestment.deployed.remainingInvestment.call();
 
     assert.equal(remainingInvestment, updateValueAmount);
 
     if (showConsoleLog) {
       console.log("updateRemainingInvestmentTx: ", updateRemainingInvestmentTx);
-      console.log("remainingInvestment: ", remainingInvestment);
+      console.log("remainingInvestment: ", remainingInvestment.toString());
     }
 
     // reset back to 0
@@ -188,9 +199,8 @@ contract("BatteryInvestment contract test", function (accounts) {
   });
 
   it("...check BatteryInvestment investMoney & getInvestorInvestment", async () => {
-    let expectedTotalInvested = (
-      await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    ).toNumber();
+    let expectedTotalInvested =
+      await contracts.BatteryInvestment.deployed.remainingInvestment.call();
 
     const investorList = [];
     await Promise.all(
@@ -203,7 +213,9 @@ contract("BatteryInvestment contract test", function (accounts) {
           });
         // expecting tx obj returned
         assert.equal(typeof investMoneyTx, "object");
-        expectedTotalInvested = expectedTotalInvested + investment.amount;
+        expectedTotalInvested = expectedTotalInvested.add(
+          new web3.utils.BN(investment.amount)
+        );
 
         // investor list should be updated
         let currInvestor =
@@ -212,183 +224,194 @@ contract("BatteryInvestment contract test", function (accounts) {
         assert.equal(currInvestor, investment.investor);
 
         // individual investor investment amt should be updated
-        let investorAmount = (
+        let investorAmount =
           await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
             investment.investor,
             0
-          )
-        ).toNumber();
+          );
         assert.equal(investorAmount, investment.amount);
       })
     );
 
-    let remainingInvestment = (
-      await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    ).toNumber();
-    assert.equal(remainingInvestment, expectedTotalInvested);
-
-    // for one of the investors, create a second investment
-    // check that indexed investorList is working properly
-    const secondInvestmentAmount = investments[2].amount * 2;
-    let investMoneyTx = await contracts.BatteryInvestment.deployed.investMoney({
-      from: investments[2].investor,
-      value: secondInvestmentAmount,
-    });
-    // expecting tx obj returned
-    assert.equal(typeof investMoneyTx, "object");
-    let getSecondInvestment = (
-      await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
-        investments[2].investor,
-        1
-      )
-    ).toNumber();
-    assert.equal(secondInvestmentAmount, getSecondInvestment);
-
-    // check remainingInvestment again
-    expectedTotalInvested = expectedTotalInvested + secondInvestmentAmount;
-    remainingInvestment = (
-      await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    ).toNumber();
-    assert.equal(remainingInvestment, expectedTotalInvested);
-
-    if (showConsoleLog) {
-      console.log("remainingInvestment: ", remainingInvestment);
-      console.log("investorList: ", investorList);
-      console.log(
-        "second investment from ",
-        investments[2].investor,
-        ": ",
-        getSecondInvestment
-      );
-    }
-  });
-
-  it("...check BatteryInvestment triggerDividend & addPendingWithdrawals & withdraw", async () => {
-    let initialInvestment = (
-      await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    ).toNumber();
-
-    // for one of the investors, create an investment
-    let investMoneyTx = await contracts.BatteryInvestment.deployed.investMoney({
-      from: investments[2].investor,
-      value: investments[2].amount,
-    });
-    // expecting tx obj returned
-    assert.equal(typeof investMoneyTx, "object", "expect completed tx");
-
-    let remainingInvestment = (
-      await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    ).toNumber();
-
-    const totalExpectedDividend = (remainingInvestment * 1) / 100;
-    await contracts.BatteryInvestment.deployed.triggerDividend();
-    const totalCurrentDividend = (
-      await contracts.BatteryInvestment.deployed.pendingTotalWithdrawals.call(0)
-    ).toNumber();
-
+    let remainingInvestment =
+      await contracts.BatteryInvestment.deployed.remainingInvestment.call();
     assert.equal(
-      totalExpectedDividend,
-      totalCurrentDividend,
-      "expect dividend matches expected"
+      remainingInvestment.toString(),
+      expectedTotalInvested.toString()
     );
 
-    const finalInvestment = (
-      await contracts.BatteryInvestment.deployed.remainingInvestment.call()
-    ).toNumber();
+    // // for one of the investors, create a second investment
+    // // check that indexed investorList is working properly
+    // const secondInvestmentAmount = investments[2].amount * 2;
+    // let investMoneyTx = await contracts.BatteryInvestment.deployed.investMoney({
+    //   from: investments[2].investor,
+    //   value: secondInvestmentAmount,
+    // });
+    // // expecting tx obj returned
+    // assert.equal(typeof investMoneyTx, "object");
+    // let getSecondInvestment = (
+    //   await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
+    //     investments[2].investor,
+    //     1
+    //   )
+    // ).toNumber();
+    // assert.equal(secondInvestmentAmount, getSecondInvestment);
 
-    assert.equal(
-      remainingInvestment - totalCurrentDividend,
-      finalInvestment,
-      "expect dividend matches calculated"
-    );
+    // // check remainingInvestment again
+    // expectedTotalInvested = expectedTotalInvested + secondInvestmentAmount;
+    // remainingInvestment = (
+    //   await contracts.BatteryInvestment.deployed.remainingInvestment.call()
+    // ).toNumber();
+    // assert.equal(remainingInvestment, expectedTotalInvested);
 
-    const totalInvestment = (
-      await contracts.BatteryInvestment.deployed.totalInvestment.call()
-    ).toNumber();
-
-    assert.equal(
-      remainingInvestment,
-      totalInvestment,
-      "expect totalInvestment matches initial investment pre-dividend"
-    );
-
-    if (showConsoleLog) {
-      console.log("totalCurrentDividend: ", totalCurrentDividend);
-      console.log("finalInvestment: ", finalInvestment);
-    }
+    // if (showConsoleLog) {
+    //   console.log("remainingInvestment: ", remainingInvestment);
+    //   console.log("investorList: ", investorList);
+    //   console.log(
+    //     "second investment from ",
+    //     investments[2].investor,
+    //     ": ",
+    //     getSecondInvestment
+    //   );
+    // }
   });
 
-  it("...check BatteryInvestment addPendingWithdrawals", async () => {
-    const totalInvestment = (
-      await contracts.BatteryInvestment.deployed.totalInvestment.call()
-    ).toNumber();
-    const totalCurrentDividend = (
-      await contracts.BatteryInvestment.deployed.pendingTotalWithdrawals.call(0)
-    ).toNumber();
+  // it("...check BatteryInvestment triggerDividend & addPendingWithdrawals & withdraw", async () => {
+  //   let initialInvestment = (
+  //     await contracts.BatteryInvestment.deployed.remainingInvestment.call()
+  //   ).toNumber();
 
-    // calculate expected user dividend matches
-    const numInvestments = (
-      await contracts.BatteryInvestment.deployed.getNumInvestorInvestment.call(
-        investments[2].investor
-      )
-    ).toNumber();
+  //   // for one of the investors, create an investment
+  //   let investMoneyTx = await contracts.BatteryInvestment.deployed.investMoney({
+  //     from: investments[2].investor,
+  //     value: investments[2].amount,
+  //   });
+  //   // expecting tx obj returned
+  //   assert.equal(typeof investMoneyTx, "object", "expect completed tx");
 
-    userTotalInvested = 0;
-    for (let ind = 0; ind < numInvestments; ind++) {
-      let tempInvestment = (
-        await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
-          investments[2].investor,
-          ind
-        )
-      ).toNumber();
-      userTotalInvested = userTotalInvested + tempInvestment;
-    }
+  //   let remainingInvestment = (
+  //     await contracts.BatteryInvestment.deployed.remainingInvestment.call()
+  //   ).toNumber();
 
-    const expectedDividendPercentage = userTotalInvested / totalInvestment;
-    const expectedUserDividend =
-      expectedDividendPercentage * totalCurrentDividend;
+  //   const totalExpectedDividend = (remainingInvestment * 1) / 100;
+  //   await contracts.BatteryInvestment.deployed.triggerDividend();
+  //   const totalCurrentDividend = (
+  //     await contracts.BatteryInvestment.deployed.pendingTotalWithdrawals.call(0)
+  //   ).toNumber();
 
-    const userDividend = (
-      await contracts.BatteryInvestment.deployed.addPendingWithdrawals.call(
-        investments[2].investor
-      )
-    ).toNumber();
-    assert.equal(userDividend, expectedUserDividend);
+  //   assert.equal(
+  //     totalExpectedDividend,
+  //     totalCurrentDividend,
+  //     "expect dividend matches expected"
+  //   );
 
-    // invoke addPendingWithdrawals tx
-    await contracts.BatteryInvestment.deployed.addPendingWithdrawals(
-      investments[2].investor
-    );
+  //   const finalInvestment = (
+  //     await contracts.BatteryInvestment.deployed.remainingInvestment.call()
+  //   ).toNumber();
 
-    const pendingWithdrawal = (
-      await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
-        investments[2].investor
-      )
-    ).toNumber();
+  //   assert.equal(
+  //     remainingInvestment - totalCurrentDividend,
+  //     finalInvestment,
+  //     "expect dividend matches calculated"
+  //   );
 
-    assert.equal(userDividend, pendingWithdrawal);
+  //   const totalInvestment = (
+  //     await contracts.BatteryInvestment.deployed.totalInvestment.call()
+  //   ).toNumber();
 
-    if (showConsoleLog) {
-      console.log("userDividend: ", userDividend);
-      console.log("pendingWithdrawal: ", pendingWithdrawal);
-    }
-  });
+  //   assert.equal(
+  //     remainingInvestment,
+  //     totalInvestment,
+  //     "expect totalInvestment matches initial investment pre-dividend"
+  //   );
 
-  it("...check BatteryInvestment withdraw", async () => {
-    // trigger a withdrawal
-    await contracts.BatteryInvestment.deployed.withdraw({
-      from: investments[2].investor,
-    });
-    // pending withdrawal should then be empty
-    const pendingWithdrawal = (
-      await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
-        investments[2].investor
-      )
-    ).toNumber();
-    assert.equal(pendingWithdrawal, 0);
+  //   if (showConsoleLog) {
+  //     console.log("totalCurrentDividend: ", totalCurrentDividend);
+  //     console.log("finalInvestment: ", finalInvestment);
+  //   }
+  // });
 
-    if (showConsoleLog) {
-      console.log("pendingWithdrawal: ", pendingWithdrawal);
-    }
-  });
+  // it("...check BatteryInvestment addPendingWithdrawals", async () => {
+  //   const totalInvestment = (
+  //     await contracts.BatteryInvestment.deployed.totalInvestment.call()
+  //   ).toNumber();
+  //   const totalCurrentDividend = (
+  //     await contracts.BatteryInvestment.deployed.pendingTotalWithdrawals.call(0)
+  //   ).toNumber();
+
+  //   // calculate expected user dividend matches
+  //   const numInvestments = (
+  //     await contracts.BatteryInvestment.deployed.getNumInvestorInvestment.call(
+  //       investments[2].investor
+  //     )
+  //   ).toNumber();
+
+  //   userTotalInvested = 0;
+  //   for (let ind = 0; ind < numInvestments; ind++) {
+  //     let tempInvestment = (
+  //       await contracts.BatteryInvestment.deployed.getInvestorInvestment.call(
+  //         investments[2].investor,
+  //         ind
+  //       )
+  //     ).toNumber();
+  //     userTotalInvested = userTotalInvested + tempInvestment;
+  //   }
+
+  //   const expectedDividendPercentage = userTotalInvested / totalInvestment;
+  //   const expectedUserDividend =
+  //     expectedDividendPercentage * totalCurrentDividend;
+
+  //   const userDividend = (
+  //     await contracts.BatteryInvestment.deployed.addPendingWithdrawals.call(
+  //       investments[2].investor
+  //     )
+  //   ).toNumber();
+  //   assert.equal(userDividend, expectedUserDividend);
+
+  //   // invoke addPendingWithdrawals tx
+  //   await contracts.BatteryInvestment.deployed.addPendingWithdrawals(
+  //     investments[2].investor
+  //   );
+
+  //   const pendingWithdrawal = (
+  //     await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
+  //       investments[2].investor
+  //     )
+  //   ).toNumber();
+
+  //   assert.equal(userDividend, pendingWithdrawal);
+
+  //   if (showConsoleLog) {
+  //     console.log("userDividend: ", userDividend);
+  //     console.log("pendingWithdrawal: ", pendingWithdrawal);
+  //   }
+  // });
+
+  // it("...check BatteryInvestment withdraw", async () => {
+  //   let balance1 = await web3.eth.getBalance(investments[2].investor);
+
+  //   await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
+  //     investments[2].investor
+  //   );
+
+  //   // trigger a withdrawal
+  //   await contracts.BatteryInvestment.deployed.withdraw({
+  //     from: investments[2].investor,
+  //   });
+  //   let balance2 = await web3.eth.getBalance(investments[2].investor);
+
+  //   // pending withdrawal should then be empty
+  //   const pendingWithdrawal =
+  //     await contracts.BatteryInvestment.deployed.getPendingWithdrawal(
+  //       investments[2].investor
+  //     );
+  //   // assert.equal(pendingWithdrawal, 0);
+
+  //   console.log(pendingWithdrawal.add(new web3.utils.BN(10)).toNumber());
+  //   console.log(balance2 - balance1);
+
+  //   if (showConsoleLog) {
+  //     console.log("pendingWithdrawal: ", pendingWithdrawal);
+  //   }
+  // });
 });
