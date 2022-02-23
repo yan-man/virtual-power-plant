@@ -43,6 +43,7 @@ class web3Contracts {
 
   async initAccounts() {
     this.accounts = await this.web3.eth.getAccounts();
+    console.log(await this.web3.eth.getBalance(this.accounts[0]));
   }
 
   async initContractTruffle() {
