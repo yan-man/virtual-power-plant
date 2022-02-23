@@ -51,39 +51,37 @@ class web3Contracts {
     const BatteryEnergy = require("../build/contracts/BatteryEnergy.json");
     const BatteryInvestment = require("../build/contracts/BatteryInvestment.json");
 
-    const VirtualPowerPlantContract = contract(VirtualPowerPlant);
-    const BatteryEnergyContract = contract(BatteryEnergy);
-    const BatteryInvestmentContract = contract(BatteryInvestment);
-    VirtualPowerPlantContract.setProvider(this.web3Provider);
-    BatteryEnergyContract.setProvider(this.web3Provider);
-    BatteryInvestmentContract.setProvider(this.web3Provider);
+    this.contracts.VirtualPowerPlant = {
+      contract: contract(VirtualPowerPlant),
+    };
+    this.contracts.BatteryInvestment = {
+      contract: contract(BatteryInvestment),
+    };
+    this.contracts.BatteryEnergy = { contract: contract(BatteryEnergy) };
 
-    const DeployedVirtualPowerPlantContract =
-      await VirtualPowerPlantContract.deployed();
+    this.contracts.VirtualPowerPlant.contract.setProvider(this.web3Provider);
+    this.contracts.BatteryInvestment.contract.setProvider(this.web3Provider);
+    this.contracts.BatteryEnergy.contract.setProvider(this.web3Provider);
 
-    const batteryInvestmentAddress =
-      await DeployedVirtualPowerPlantContract.batteryInvestmentAddress();
-    const batteryEnergyAddress =
-      await DeployedVirtualPowerPlantContract.batteryEnergyAddress();
+    this.contracts.VirtualPowerPlant.deployed =
+      await this.contracts.VirtualPowerPlant.contract.deployed();
 
-    const DeployedBatteryInvestmentContract =
-      await BatteryInvestmentContract.at(batteryInvestmentAddress);
-    const DeployedBatteryEnergyContract = await BatteryEnergyContract.at(
-      batteryEnergyAddress
-    );
+    this.contracts.BatteryInvestment.address =
+      await this.contracts.VirtualPowerPlant.deployed.batteryInvestmentAddress();
 
-    await DeployedBatteryInvestmentContract.investMoney({
-      from: this.accounts[0],
-      value: this.web3.utils.toWei("0.2", "ether"),
-    });
+    this.contracts.BatteryEnergy.address =
+      await this.contracts.VirtualPowerPlant.deployed.batteryEnergyAddress();
 
-    // this.contracts.VirtualPowerPlant = contract(VirtualPowerPlant);
-    // this.contracts.BatteryInvestment = contract(BatteryInvestment);
-    // this.contracts.BatteryEnergy = contract(BatteryEnergy);
+    this.contracts.BatteryInvestment.deployed =
+      await this.contracts.BatteryInvestment.contract.at(
+        this.contracts.BatteryInvestment.address
+      );
+    this.contracts.BatteryEnergy.deployed =
+      await this.contracts.BatteryEnergy.contract.at(
+        this.contracts.BatteryEnergy.address
+      );
 
-    // this.contracts.VirtualPowerPlant.setProvider(this.web3Provider);
-    // this.contracts.BatteryInvestment.setProvider(this.web3Provider);
-    // this.contracts.BatteryEnergy.setProvider(this.web3Provider);
+    console.log(this.contracts);
   }
 
   async initContract() {
