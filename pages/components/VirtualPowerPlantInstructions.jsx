@@ -6,25 +6,22 @@ import web3Contracts from "../api/web3Contracts";
 
 import batteryInfo from "../api/batteries";
 
-import ExistingBatteryCarousel from "./ExistingBatteryCarousel";
 import BatteryCarousel from "./BatteryCarousel";
 class VirtualPowerPlantInstructions extends Component {
   state = {
     value: 0.0,
     myAddress: "",
     myBalance: 0,
-    info: {
-      totalInvestment: 0,
-      remainingInvestment: 0,
-      numBatteries: 0,
-    },
-    batteryList: {},
+    totalInvestment: 0,
+    remainingInvestment: 0,
+    numBatteries: 0,
+    batteryList: [],
     Web3Contracts: {},
   };
   timerID;
   componentDidMount = async () => {
     console.log("componentDidMount; init web3");
-    this.timerID = setInterval(() => this.tick(), 3000);
+    this.timerID = setInterval(() => this.tick(), 5000);
 
     const Web3Contracts = new web3Contracts();
     await Web3Contracts.init();
@@ -38,48 +35,28 @@ class VirtualPowerPlantInstructions extends Component {
   }
   async tick() {
     // console.log("tick");
-    // this.updateBatteryList();
     this.updateStats();
   }
 
   updateBatteryList = async () => {
-    if (this.Web3Contracts.contracts) {
-      let batteryMapping =
-        await this.Web3Contracts.contracts.VirtualPowerPlant.methods
-          .getBatteryMapping()
-          .call();
-
-      let newBatteryList = await batteryMapping.map(async (batteryId) => {
-        let result =
-          await this.Web3Contracts.contracts.VirtualPowerPlant.methods
-            .getBattery(batteryId)
-            .call();
-        let newBattery = {
-          capacity: result.capacity,
-          chargeRate: result.chargeRate,
-          cost: result.cost,
-          currentFilled: result.currentFilled,
-          dateAdded: result.dateAdded,
-          isActive: result.isActive,
-          mapIndex: result.mapIndex,
-          priceThreshold: result.priceThreshold,
-          serialNumber: result.serialNumber,
-        };
-        return newBattery;
-      });
-      await newBatteryList;
-      console.log(newBatteryList);
-      // this.setState({batteryList: batteryList})
+    const { Web3Contracts, numBatteries } = this.state;
+    if (Web3Contracts.contracts && numBatteries > 0) {
+      const batteryList = [];
+      for (let ind = 0; ind < numBatteries; ind++) {
+        batteryList.push(await this.state.Web3Contracts.getBattery(ind));
+      }
+      this.setState({ batteryList });
     }
-
-    //     promiseB = promiseA.then(function(result) {
-    //   return result + 1;
-    // });
   };
 
   updateStats = async () => {
     console.log("updateStats");
-    const { Web3Contracts } = this.state;
+    const {
+      Web3Contracts,
+      totalInvestment,
+      remainingInvestment,
+      numBatteries,
+    } = this.state;
     if (Web3Contracts.contracts) {
       let totalInvestment =
         await Web3Contracts.contracts.BatteryInvestment.deployed.totalInvestment();
@@ -101,29 +78,49 @@ class VirtualPowerPlantInstructions extends Component {
         this.state.myAddress
       );
 
-      console.log(
-        await Web3Contracts.web3.eth.getBalance(
-          Web3Contracts.contracts.BatteryInvestment.address
-        )
-      );
+      // console.log(
+      //   await Web3Contracts.web3.eth.getBalance(
+      //     Web3Contracts.contracts.BatteryInvestment.address
+      //   )
+      // );
 
       myBalance = Web3Contracts.web3.utils.fromWei(myBalance, "ether");
       this.setState({
-        info: { totalInvestment, remainingInvestment, numBatteries },
+        totalInvestment,
+        remainingInvestment,
+        numBatteries,
         myBalance,
       });
+    }
+  };
+  addBattery = async (batteryId) => {
+    if (this.state.Web3Contracts.web3) {
+      // console.log(batteryInfo[batteryId]);
+      await this.state.Web3Contracts.addBattery(batteryInfo[batteryId]);
+      this.updateBatteryList();
+      // const result = await this.state.Web3Contracts.getBattery(0);
     }
   };
   handleSubmit = async (event) => {
     event.preventDefault();
     await this.state.Web3Contracts.invest(String(this.state.value));
-    // await this.updateStats();
+    await this.updateStats();
   };
   handleChange = (event) => {
     this.setState({ value: event.target.value });
   };
   render() {
-    const { Web3Contracts, myBalance, myAddress, info } = this.state;
+    const {
+      Web3Contracts,
+      batteryList,
+      myBalance,
+      myAddress,
+      totalInvestment,
+      remainingInvestment,
+      numBatteries,
+    } = this.state;
+    this.updateBatteryList();
+
     return (
       <React.Fragment>
         <Row>
@@ -173,20 +170,19 @@ class VirtualPowerPlantInstructions extends Component {
           <Col>
             <h5>Total Amount Invested:</h5>
             <h4>
-              <span id="totalInvestment">{info.totalInvestment}</span> eth
+              <span id="totalInvestment">{totalInvestment}</span> eth
             </h4>
           </Col>
           <Col>
             <h5>Remaining Amount Left:</h5>
             <h4>
-              <span id="remainingInvestment">{info.remainingInvestment}</span>{" "}
-              eth
+              <span id="remainingInvestment">{remainingInvestment}</span> eth
             </h4>
           </Col>
           <Col>
             <h5>Number of Batteries:</h5>
             <h4>
-              <span id="numBatteries">{info.numBatteries}</span>
+              <span id="numBatteries">{numBatteries}</span>
             </h4>
           </Col>
         </Row>
@@ -196,8 +192,8 @@ class VirtualPowerPlantInstructions extends Component {
         <Row>
           <h3>Step 1:</h3>
           <p>
-            Invest some amount of Eth into the investment fund (sufficient to
-            purchase a battery). (Click "Invest")
+            Invest some eth into the joint investment fund (enough to
+            purchase a battery in Step 2).
           </p>
         </Row>
         <Row>
@@ -218,17 +214,28 @@ class VirtualPowerPlantInstructions extends Component {
           </div>
         </Row>
         <Row>
+          <BatteryCarousel
+            classType={"carousel-active"}
+            batteries={batteryList}
+            Web3Contracts={Web3Contracts}
+          />
+        </Row>
+        <Row>
           <h3>Step 2:</h3>
           <p>
-            Add one or more batteries to the battery array. Make sure you are in
-            the account of the user who has deployed the contract (probably
-            accounts[0]) to maintain admin permissions (Click "Add to array")
+            Add one or more batteries to the battery array. (Click "Add to
+            array")
           </p>
         </Row>
         <Row>
-          <BatteryCarousel batteries={batteryInfo} />
+          <BatteryCarousel
+            batteries={batteryInfo}
+            classType={"carousel"}
+            Web3Contracts={Web3Contracts}
+            addBattery={this.addBattery}
+          />
         </Row>
-        <Row>
+        {/* <Row>
           <div id="batteryRow" className="row"></div>
           <h3>Step 3:</h3>
           <p>
@@ -245,7 +252,7 @@ class VirtualPowerPlantInstructions extends Component {
               Execute Energy Transactions
             </button>
           </div>
-        </Row>
+        </Row> */}
       </React.Fragment>
     );
   }

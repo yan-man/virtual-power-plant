@@ -96,35 +96,51 @@ class web3Contracts {
   }
 
   async addBattery(battery) {
-    const batteryId = await this.contracts.VirtualPowerPlant.methods
-      .addBattery(
+    try {
+      await this.contracts.VirtualPowerPlant.deployed.addBattery(
         battery.capacity,
         battery.currentFilled,
-        this.web3.utils.toWei(battery.cost, "ether"),
+        String(battery.cost),
         battery.serialNumber,
         battery.priceThreshold,
-        battery.chargeRate
-      )
-      .send({
-        from: this.accounts[0],
-      });
+        battery.chargeRate,
+        {
+          from: this.accounts[0],
+        }
+      );
 
-    let numBatteries = await this.contracts.VirtualPowerPlant.methods
-      .numBatteries()
-      .call();
-
-    let remaining = await this.contracts.BatteryInvestment.methods
-      .remainingInvestment()
-      .call();
-
-    // console.log(numBatteries);
-    // console.log(remaining);
-
-    // for (let i = 0; i <= numBatteries; i++) {
-    //   console.log(i);
-    // }
+      return true;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
+  async getBattery(index) {
+    try {
+      const {
+        capacity,
+        chargeRate,
+        cost,
+        currentFilled,
+        dateAdded,
+        isActive,
+        mapIndex,
+        priceThreshold,
+        serialNumber,
+      } = await this.contracts.VirtualPowerPlant.deployed.getBattery(index);
+      const battery = {
+        capacity: capacity.toString(),
+        currentFilled: currentFilled.toString(),
+        cost: cost.toString(),
+        serialNumber: serialNumber, // add1
+        priceThreshold: priceThreshold.toString(),
+        chargeRate: chargeRate.toString(),
+      };
+      return battery;
+    } catch (err) {
+      console.log(err);
+    }
+  }
   async getBatteryInvestmentAddress() {
     try {
       const batteryInvestmentAddress =
