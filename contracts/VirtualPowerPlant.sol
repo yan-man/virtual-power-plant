@@ -6,8 +6,10 @@ import "./BatteryInvestment.sol";
 import "./BatteryEnergy.sol";
 import "./Ownable.sol"; // to manage ownership addresses
 
-/// @author Yan Man
-/// @title A Virtual Power Plant implementation. Consensys Final Project Winter 2018/19
+/**
+ * @author Yan Man
+ * @title A Virtual Power Plant implementation v0.3.0
+ */
 contract VirtualPowerPlant is Ownable {
   using SafeMath for uint256;
 
