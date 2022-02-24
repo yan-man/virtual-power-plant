@@ -1,21 +1,35 @@
 {
   "name": "virtual-power-plant",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.2.0",
+  "author": "Yan Man",
+  "keywords": [],
+  "description": "demo dApp implementation of VPP",
   "main": "truffle.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "dev": "lite-server",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "lite-server": "^2.3.0"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "truffle-hdwallet-provider": "^1.0.2"
+    "@openzeppelin/contracts": "^2.5.1",
+    "@truffle/contract": "^4.3.43",
+    "@truffle/hdwallet-provider": "^1.7.0",
+    "bootstrap": "^5.1.3",
+    "ganache-cli": "^6.12.2",
+    "next": "12.0.4",
+    "react": "17.0.2",
+    "react-bootstrap": "^2.0.3",
+    "react-dom": "17.0.2",
+    "web3": "^1.6.1"
+  },
+  "devDependencies": {
+    "eslint": "7.32.0",
+    "eslint-config-next": "12.0.4",
+    "prettier": "^2.5.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19"
   }
 }
